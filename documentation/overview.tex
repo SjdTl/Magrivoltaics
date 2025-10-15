@@ -13,7 +13,7 @@ draw]
 
 % \begin{tikzpicture}
   % \node[block, draw] at (0,0) {
-    \begin{tikzpicture}[scale=0.5, transform shape]
+    \begin{tikzpicture}[scale=0.5, transform shape, gray]
       \node (energy_out) [block, minimum height = 3cm] at (0,0) {Energy output};
       \node (energy_used) [block, minimum height = 2cm, anchor=north, yshift=-0.25cm] at (energy_out.south) {Energy usage};
       \node (subtract) [circle, draw, yshift=-0.5cm, xshift=1cm, inner sep = 0pt, minimum size = 0.5cm] at (energy_out.south east) {\Large\textbf{$-$}};
