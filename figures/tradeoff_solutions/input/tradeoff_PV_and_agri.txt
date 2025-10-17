@@ -1,0 +1,20 @@
+{\small\begin{longtblr}[
+  label = tradeoff_PV_and_agri,
+  entry = none,
+  caption = {Tradeoff for the different solutions: PV and agriculture}
+  ]{
+  width = {\linewidth},
+  colspec = {Q[60, font=\bfseries]Q[20]Q[20]Q[20]Q[20]Q[20]Q[20]},
+  vlines,
+  column{2-Z} = {cmd=\colornum},
+  abovesep=1pt, belowsep=1pt, leftsep=1.5pt, rightsep=1.5pt,
+}
+Criterion & S1 Basic & S2 Improved & S3 High-eff & S4 Complex & S5 Compact & S6 Simple \\ \hline
+C1 Environmental            & 3 & 3 & 2 & 2 & 4 & 2 \\  
+C2 Economical               & 1 & 2 & 3 & 4 & 3 & 3 \\  
+C3 Performance              & 3 & 2 & 1 & 1 & 3 & 2 \\  
+C4 Grid \& PQ                 & 3 & 2 & 1 & 1 & 3 & 2 \\  
+C5 Agri-operability         & 2 & 2 & 2 & 1 & 3 & 1 \\  
+C6 Schedule \& Compl   & 2 & 3 & 3 & 4 & 2 & 1 \\  
+C7 Social \& Visual           & 2 & 3 & 3 & 4 & 3 & 4 \\
+\end{longtblr}}
