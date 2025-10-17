@@ -4,17 +4,16 @@
   caption = {Tradeoff for the different solutions: PV and agriculture}
   ]{
   width = {\linewidth},
-  colspec = {Q[60, font=\bfseries]Q[20]Q[20]Q[20]Q[20]Q[20]Q[20]},
-  vlines,
+  colspec = {Q[47, font=\bfseries]Q[20, c]Q[20, c]Q[20, c]Q[20, c]Q[20, c]Q[20, c]},
   column{2-Z} = {cmd=\colornum},
-  abovesep=1pt, belowsep=1pt, leftsep=1.5pt, rightsep=1.5pt,
+  abovesep=1pt, belowsep=1pt, leftsep=0.5pt, rightsep=0.5pt,
 }
-Criterion & S1 Basic & S2 Improved & S3 High-eff & S4 Complex & S5 Compact & S6 Simple \\ \hline
-C1 Environmental            & 3 & 3 & 2 & 2 & 4 & 2 \\  
-C2 Economical               & 1 & 2 & 3 & 4 & 3 & 3 \\  
-C3 Performance              & 3 & 2 & 1 & 1 & 3 & 2 \\  
-C4 Grid \& PQ                 & 3 & 2 & 1 & 1 & 3 & 2 \\  
-C5 Agri-operability         & 2 & 2 & 2 & 1 & 3 & 1 \\  
-C6 Schedule \& Compl   & 2 & 3 & 3 & 4 & 2 & 1 \\  
-C7 Social \& Visual           & 2 & 3 & 3 & 4 & 3 & 4 \\
+\hline Criterion & S1 Basic & S2 High & S3 Efficient & S4 Compact & S5 Transparent & S6 Removeable \\ \hline
+C1 Environmental            & 1 & 2 & 2 & 3 & 3 & 2  \\  
+C2 Economical               & 1 & 3 & 3 & 5 & 3 & 3 \\  
+C3 Performance              & 2 & 2 & 1 & 1 & 3 & 2 \\  
+C4 Grid \& PQ               & 0 & 0 & 0 & 0 & 0 & 0 \\  
+C5 Agri-operability         & 2 & 1 & 1 & 5 & 2 & 4 \\  
+C6 Schedule \& Compl        & 1 & 2 & 3 & 5 & 3 & 3 \\  
+C7 Social \& Visual         & 0 & 0 & 0 & 0 & 0 & 1 \\ \hline
 \end{longtblr}}
