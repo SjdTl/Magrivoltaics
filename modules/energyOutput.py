@@ -10,7 +10,7 @@ def energy_output(latitude: float = 10,
                   longitude : float = 10,
                   elevation : float = 10,
                   azimuth : float = 10,
-                  angle : float = 10,
+                  tilt : float = 10,
                   area : float = 10,
                   coverage : float = 0.5,
                   rated_power : float = 10,
@@ -31,7 +31,7 @@ def energy_output(latitude: float = 10,
         Elevation of the farm
     azimuth : float
         Azimuth in degrees [deg]
-    angle : float 
+    tilt : float 
         Angle in degrees [deg]
     area : float
         Area in m2 [m^2]
@@ -45,11 +45,11 @@ def energy_output(latitude: float = 10,
     Returns
     -------
     energy : pd.Dataframe
-        Energy per month in a pandas dataframe according to the following format:
-        | Month    | Energy output [kWh] | 
-        | -------- | ------------------- |
-        | January  | xxx kWh             | 
-        | February | xxx kWh             | 
+        Energy per month in a pandas dataframe AND the solar irradiation according to the following format:
+        | Month    | Energy output [kWh] | Irradiation [kWh/m^2] |
+        | -------- | ------------------- | --------------------- |
+        | January  | xxx                 | xxx                   |
+        | February | xxx                 | xxx                   |
     
     Raises
     ------
@@ -64,26 +64,24 @@ def energy_output(latitude: float = 10,
     --------
     >>> database = energy_output(coverage=0.4)
     >>> print(database)
-        | Month    | Energy output [kWh] |
-        | -------- | ------------------- |
-        | January  | xxx kWh             | 
-        | February | xxx kWh             | 
+        | Month    | Energy output [kWh] | Irradiation [kWh/m^2] |
+        | -------- | ------------------- | --------------------- |
+        | January  | xxx                 | xxx                   |
+        | February | xxx                 | xxx                   |
     """
     if efficiency > 1 or efficiency < 0:
         raise ValueError("Efficiency should be in fractions, ranging from 0.0 to 1.0")
     if coverage > 1 or coverage < 0:
         raise ValueError("Coverage should be in fractions, ranging from 0.0 to 1.0")
-    
-
-
-
 
 
 
     energy = 12*[12]
-    
+    irradiation = 12*[20]
 
-    energy = pd.DataFrame(energy, columns=["Energy output [kWh]"], index=months)
+    energy = pd.DataFrame(np.transpose([energy, irradiation]), 
+                          columns=["Energy output [kWh]", "Irradiation [kWh/m^2]"], 
+                          index=months)
     return energy
 
 if __name__ == '__main__':
