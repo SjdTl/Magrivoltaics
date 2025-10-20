@@ -1,13 +1,16 @@
 import pandas as pd
 import numpy as np
+import pvlib
+from pvlib.tools import cosd
+import matplotlib.pyplot as plt
 
 months = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ]
 
-def energy_output(latitude: float = 10, 
-                  longitude : float = 10,
+def energy_output(latitude: float = 35, 
+                  longitude : float = 15,
                   elevation : float = 10,
                   azimuth : float = 10,
                   angle : float = 10,
@@ -41,7 +44,7 @@ def energy_output(latitude: float = 10,
         Rated power of the panels in Watt [W]
     efficiency : float
         Efficiency of the panels in fractions [ ]
-
+    
     Returns
     -------
     energy : pd.Dataframe
@@ -74,14 +77,29 @@ def energy_output(latitude: float = 10,
     if coverage > 1 or coverage < 0:
         raise ValueError("Coverage should be in fractions, ranging from 0.0 to 1.0")
     
-
-
-
-
-
-
-    energy = 12*[12]
+    location = pvlib.location.Location(latitude=35, longitude=15)
+    times = pd.date_range('2020-06-28', periods=24*60, freq='1min', tz='UTC')
+    solpos = location.get_solarposition(times)
+    clearsky = location.get_clearsky(times, model='ineichen')
     
+    height = 2.6  # [m] height of torque above ground
+    pitch = 12  # [m] row spacing
+    row_width = 2 * 2.384  # [m] two modules in portrait, each 2 m long
+    gcr = row_width / pitch  # ground coverage ratio [unitless]
+    axis_azimuth = 0  # [degrees] north-south tracking axis
+    max_angle = 55  # [degrees] maximum rotation angle
+
+    tracking_orientations = pvlib.tracking.singleaxis(
+        apparent_zenith=solpos['apparent_zenith'],
+        solar_azimuth=solpos['azimuth'],
+        axis_azimuth=axis_azimuth,
+        max_angle=max_angle,
+        backtrack=True,
+        gcr=gcr,
+    )
+
+
+    # energy = 12*[12]
 
     energy = pd.DataFrame(energy, columns=["Energy output [kWh]"], index=months)
     return energy
