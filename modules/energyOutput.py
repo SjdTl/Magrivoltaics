@@ -18,7 +18,7 @@ def energy_output(latitude: float = 35,
                   coverage : float = 0.5,
                   rated_power : float = 10,
                   efficiency : float = 0.5,
-                  ):
+                ):
     """
     Description
     -----------
@@ -44,7 +44,7 @@ def energy_output(latitude: float = 35,
         Rated power of the panels in Watt [W]
     efficiency : float
         Efficiency of the panels in fractions [ ]
-    
+
     Returns
     -------
     energy : pd.Dataframe
@@ -76,33 +76,65 @@ def energy_output(latitude: float = 35,
         raise ValueError("Efficiency should be in fractions, ranging from 0.0 to 1.0")
     if coverage > 1 or coverage < 0:
         raise ValueError("Coverage should be in fractions, ranging from 0.0 to 1.0")
-    
-    location = pvlib.location.Location(latitude=35, longitude=15)
-    times = pd.date_range('2020-06-28', periods=24*60, freq='1min', tz='UTC')
+    """
+    Estimate monthly average power output (kW) for an agrivoltaic PV system.
+    Based on pvlib's irradiance and PVWatts models.
+    """
+
+    # --- 1. Location and time setup (yearly hourly timeseries)
+    location = pvlib.location.Location(latitude, longitude, altitude=elevation)
+    times = pd.date_range('2024-01-01', '2024-12-31 23:00', freq='1h', tz='UTC')
+
     solpos = location.get_solarposition(times)
     clearsky = location.get_clearsky(times, model='ineichen')
-    
-    height = 2.6  # [m] height of torque above ground
-    pitch = 12  # [m] row spacing
-    row_width = 2 * 2.384  # [m] two modules in portrait, each 2 m long
-    gcr = row_width / pitch  # ground coverage ratio [unitless]
-    axis_azimuth = 0  # [degrees] north-south tracking axis
-    max_angle = 55  # [degrees] maximum rotation angle
+    dni_extra = pvlib.irradiance.get_extra_radiation(times)
 
-    tracking_orientations = pvlib.tracking.singleaxis(
-        apparent_zenith=solpos['apparent_zenith'],
+    # --- 2. Ground coverage ratio from coverage input
+    gcr = coverage  # directly use user-specified ratio
+    height = 2.5    # assumed tracker height for agrivoltaic system
+    row_width = 2*2.384 # assumed row_width 
+    pitch = row_width / gcr
+
+    # --- 3. Simple fixed-tilt POA model
+    poa = pvlib.irradiance.get_total_irradiance(
+        surface_tilt=angle,
+        surface_azimuth=azimuth,
+        dni=clearsky['dni'],
+        ghi=clearsky['ghi'],
+        dhi=clearsky['dhi'],
+        solar_zenith=solpos['apparent_zenith'],
         solar_azimuth=solpos['azimuth'],
-        axis_azimuth=axis_azimuth,
-        max_angle=max_angle,
-        backtrack=True,
-        gcr=gcr,
+        dni_extra=dni_extra,
+        model='haydavies'
     )
 
+    # --- 4. PVWatts power model
+    temp_air = 20  # °C, assumed
+    temp_cell = pvlib.temperature.faiman(
+        poa_global=poa['poa_global'], temp_air=temp_air
+    )
+    gamma_pdc = -0.004  # power temp coefficient
+    N_modules = 100
+    power_dc = pvlib.pvsystem.pvwatts_dc(
+        effective_irradiance=poa['poa_global'],
+        temp_cell=temp_cell,
+        pdc0= rated_power * N_modules,  
+        gamma_pdc=gamma_pdc
+    )
 
-    # energy = 12*[12]
+    # --- 5. Apply efficiency and panel area scaling (optional realism)
+    power_kw = (power_dc * efficiency / 1000.0)
 
-    energy = pd.DataFrame(energy, columns=["Energy output [kWh]"], index=months)
-    return energy
+    # --- 6. Monthly aggregation
+    monthly_avg_power = power_kw.resample('ME').mean()
+    monthly_avg_power.index = monthly_avg_power.index.strftime('%B')
+
+    result = pd.DataFrame({
+        'Month': monthly_avg_power.index,
+        'Average Power (kW)': monthly_avg_power.values
+    })
+
+    return result
 
 if __name__ == '__main__':
     database = energy_output()
