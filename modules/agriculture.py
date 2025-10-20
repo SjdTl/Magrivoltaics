@@ -5,8 +5,8 @@ months = [
         "July", "August", "September", "October", "November", "December"
     ]
 
-def agricultural(energy_output = 12*[10],
-                 irradiation = 12*[20],
+def agricultural(irradiation_panels = 12*[10],
+                 irradiation_crop = 12*[20],
                  crop_type = "potatoes"):
     """
     Description
@@ -15,9 +15,9 @@ def agricultural(energy_output = 12*[10],
     
     Parameters
     ----------
-    energy_out : np.array 
-        Energy output of the solar array per month [kWh] (not used in this version)
-    irrediation : np.array
+    irradiation_panels : np.array 
+        Energy output of the solar array per month [kWh]
+    irradiation_crop : np.array
        Irradiation per m^2 [kW/m2] still arriving at crop 
     crop_type : str
         Crop type
@@ -67,9 +67,9 @@ def agricultural(energy_output = 12*[10],
     # Compare actual irradiation with required range
     impact = []
     for i, month in enumerate(months):
-        if irradiation[i] < min_req[i]:
+        if irradiation_crop[i] < min_req[i]:
             impact.append("Crop yield reduced (too low irradiation)")
-        elif irradiation[i] > max_req[i]:
+        elif irradiation_crop[i] > max_req[i]:
             impact.append("Crop yield may be stressed (too high irradiation)")
         else:
             impact.append("Yield remains constant")
@@ -78,7 +78,7 @@ def agricultural(energy_output = 12*[10],
     # Build the crop impact dataframe
     crop_impact = pd.DataFrame({
         "Month": months,
-        "Irradiation [MJ/m²/month]": irradiation,
+        "Irradiation [MJ/m²/month]": irradiation_crop,
         "Crop impact [unit]": impact
     })
 
