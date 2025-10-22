@@ -75,23 +75,17 @@ def economics(area=10000,                           # total farm area [m²]
     ROI=(net_profit/CAPEX)*100
 
     single_parameters = pd.DataFrame({
-        "LCOE" : [LCOE],
+        "LCOE [EUR/kWh]" : [LCOE],
          "ROI" : [ROI],
+         "Operation & Maintenance cost [EUR/y]" : [OM],
+         "Energy price [EUR/kWh]" : [energy_price],
          })
 
-    maintenance_cost = OM
 
-    return maintenance_cost, energy_price, LCOE, ROI
+    return single_parameters
 
 # ===== Test the function =====
 if __name__ == '__main__':
-    s, m, q, r = economics(
+    s = economics(
     )
-    print("Operation & maintenance costs [€/year]")
     print(s)
-    print("\nEnergy price [€/kWh]")
-    print(m)
-    print("\nLCOE [€/kWh]")
-    print(q)
-    print("\nROI")
-    print(m)
