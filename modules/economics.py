@@ -6,13 +6,13 @@ months = [
         "July", "August", "September", "October", "November", "December"
     ]
 
-def economics(area=10000,                           # total farm area [m²]
-              coverage: float =0.5,                       # fraction of area covered by PV (0–1)
-              rows: float =10,                           # number of rows in the farm
-              length_rows: float =1000,                    # length of each row [m]
-              height_panel: float = 2,                   # height panel
-              energy = np.linspace(5,20,12),  # pandas DataFrame: monthly energy production [kWh/month]
-              subsidy=0.0,                    # subsidy fraction of CAPEX (0–1)
+def economics(area=10000,
+              coverage: float =0.5,
+              rows: float =10,
+              length_rows: float =1000,
+              height_panel: float = 2,
+              energy = np.linspace(5,20,12),
+              subsidy=0.0,
               lifetime : float = 30):
     """
     Description
@@ -21,30 +21,35 @@ def economics(area=10000,                           # total farm area [m²]
     
     Parameters
     ----------
-    subsidy : float
-        Amount of subsidy given initially [Eur]
-    energy_per_year : np.array
-        Amount of energy each month for the system in [kWh]
-    lifetime : float
-        Lifetime of the system [y]
-    
+    area : float
+        Total farm area [m^2]
+    coverage : float 
+        Fraction of area covered by PV (0-1)
+    rows : float
+        Number of rows in the farm
+    length_rows : float 
+        Length of each row [m]
+    height_panel : float 
+        Heights of panels 
+    energy : np.array
+        Monthly energy production [kWh/month]
+    subsidy : float 
+        Subsidy faction of CAPEX (0-1)
+    lifetime : float 
+        Lifetime of the system in years
+        
     Returns
     -------
     single_parameters : pd.Dataframe
         Parameters of the plant that hold for the entire lifetime
-        |      | Value |
-        | LCEO | xxx   |
-    montly_parameters : pd.Dataframe
-        Parameters that change monthly, but are consistent yearly
-        |          | Maintenance cost |
-        | January  | xxxx             | 
-        | February | xxxx             |                  
+        |   | LCEO [EUR/kWh] | ROI | Operation & Maintenance cost [EUR/y] | Energy price [EUR/kWh] |
+        | - | -------------- | --- | ------------------------------------ | ---------------------- |
+        | 0 | xxx            | xxx | xxx                                  | xxx                    |
+    
     Notes
     -----
-
-    Examples
-    --------
-
+    See report for more information
+    
     """
 
     # area calculations
@@ -81,11 +86,9 @@ def economics(area=10000,                           # total farm area [m²]
          "Energy price [EUR/kWh]" : [energy_price],
          })
 
-
     return single_parameters
 
 # ===== Test the function =====
 if __name__ == '__main__':
-    s = economics(
-    )
+    s = economics()
     print(s)

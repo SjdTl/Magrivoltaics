@@ -25,12 +25,38 @@ def agricultural(
     -------
     crop_impact : pd.DataFrame
         DataFrame showing the crop impact by month:
-            | Month    | Crop impact |
+            | Month    | Crop impact [kW/m^2] |
+            | -------- | -------------------- |
+            | January  | xxx                  |
+        A positive value +y indicates that there is y kW/m^2 too much radiance
+        A negative value -y indicates that there is y kW/m^2 too little radiance
+        A zero value 0 indicates that the radiation is within the range required for the crop
     
     Raises
     ------
     ValueError
         If crop_type not recognized.
+
+    Note 
+    ----
+    Assume that the average photon wavelength of sunlight is 550nm as this is the main peak
+    E_ph=hc/λ --> E_ph= 3.61x10^-19 J
+    1 μmol photons = 6.022x10^17 photons
+    E_per_μmol = 3.61x10^-19 J * 6.022x10^17 photons = 0.217 J--> 0.000217 kJ
+    --> 1 μmol/m²/s = 0.000217 kW/m²
+
+    Reference POTATO:
+    @article{KELLER2019104293,
+    title = {Historical increase in agricultural machinery weights enhanced soil stress levels and adversely affected soil functioning},
+    journal = {Soil and Tillage Research},
+    volume = {194},
+    pages = {104293},
+    year = {2019},
+    issn = {0167-1987},
+    doi = {https://doi.org/10.1016/j.still.2019.104293},
+    url = {https://www.sciencedirect.com/science/article/pii/S016719871930131X},
+    author = {Thomas Keller and Maria Sandin and Tino Colombi and Rainer Horn and Dani Or}
+    }
     """
 
     # Define possible crops and their requirements
@@ -57,28 +83,6 @@ def agricultural(
             }
         }
     }
-
-    """
-    Assume that the average photon wavelength of sunlight is 550nm as this is the main peak
-    E_ph=hc/λ --> E_ph= 3.61x10^-19 J
-    1 μmol photons = 6.022x10^17 photons
-    E_per_μmol = 3.61x10^-19 J * 6.022x10^17 photons = 0.217 J--> 0.000217 kJ
-    --> 1 μmol/m²/s = 0.000217 kW/m²
-
-    Reference POTATO:
-    @article{KELLER2019104293,
-    title = {Historical increase in agricultural machinery weights enhanced soil stress levels and adversely affected soil functioning},
-    journal = {Soil and Tillage Research},
-    volume = {194},
-    pages = {104293},
-    year = {2019},
-    issn = {0167-1987},
-    doi = {https://doi.org/10.1016/j.still.2019.104293},
-    url = {https://www.sciencedirect.com/science/article/pii/S016719871930131X},
-    author = {Thomas Keller and Maria Sandin and Tino Colombi and Rainer Horn and Dani Or}
-    }
-    
-    """
 
     # Check if crop is valid
     if crop_type.lower() not in possible_crops:
