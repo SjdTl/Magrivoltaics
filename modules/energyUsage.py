@@ -6,8 +6,7 @@ months = [
         "July", "August", "September", "October", "November", "December"
     ]
 
-def energy_usage(something : float = 10,
-                  ):
+def energy_usage():
     """
     Description
     -----------
@@ -18,8 +17,7 @@ def energy_usage(something : float = 10,
     
     Parameters
     ----------
-    something : float
-        Parameter that influences the energy usage
+    No inputs
 
     Returns
     -------
@@ -32,7 +30,9 @@ def energy_usage(something : float = 10,
     
     Notes
     -----
-    xxx
+    THIS MODULE IS MADE ZERO. 
+    It still exists in case this model has to be used for a farm that uses quite a lot of electricity
+    However, for simplicity, we have made this zero for now
     
     Examples
     --------
@@ -44,7 +44,7 @@ def energy_usage(something : float = 10,
         | February | xxx kWh       | 
     """
     
-    energy = 12*[0]
+    energy = 12*[0] 
     energy = pd.DataFrame(energy, columns=["Energy usage [kWh]"], index=months)
     return energy
 

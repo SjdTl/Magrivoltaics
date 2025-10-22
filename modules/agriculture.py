@@ -6,8 +6,7 @@ months = [
 ]
 
 def agricultural(
-    irradiation_panels=None,
-    irradiation_crop=None,
+    irradiation_crop=[20] * 12,
     crop_type="potatoes"
 ):
     """
@@ -17,8 +16,6 @@ def agricultural(
 
     Parameters
     ----------
-    irradiation_panels : np.array 
-        Energy output of the solar array per month [kWh]
     irradiation_crop : np.array
        Irradiation per m^2 [kW/m2] still arriving at crop 
     crop_type : str
@@ -28,48 +25,20 @@ def agricultural(
     -------
     crop_impact : pd.DataFrame
         DataFrame showing the crop impact by month:
-            | Month    | Irradiation [kW/m²] | Crop impact |
+            | Month    | Crop impact [kW/m^2] |
+            | -------- | -------------------- |
+            | January  | xxx                  |
+        A positive value +y indicates that there is y kW/m^2 too much radiance
+        A negative value -y indicates that there is y kW/m^2 too little radiance
+        A zero value 0 indicates that the radiation is within the range required for the crop
     
     Raises
     ------
     ValueError
         If crop_type not recognized.
-    """
 
-    # Default values
-    if irradiation_panels is None:
-        irradiation_panels = [10] * 12
-    if irradiation_crop is None:
-        irradiation_crop = [20] * 12
-
-    # Define possible crops and their requirements
-    possible_crops = ["potatoes"]
-
-    crop_requirements = {
-        "potatoes": {
-            "stages": [
-                "dormant", "dormant", "dormant", "dormant",
-                "seedling", "vegetative", "vegetative", "flowering",
-                "fruiting", "dormant", "dormant", "dormant"
-            ],
-            "stage_ppfd_min": {
-                "dormant": 0,
-                "seedling": 100,
-                "vegetative": 200,
-                "flowering": 500,
-                "fruiting": 500
-            },
-            "stage_ppfd_max": {
-                "dormant": 0,  # Dormant period - no irradiation requirements
-                "seedling": 200,
-                "vegetative": 600,
-                "flowering": 600,
-                "fruiting": 600
-            }
-        }
-    }
-
-    """
+    Note 
+    ----
     Assume that the average photon wavelength of sunlight is 550nm as this is the main peak
     E_ph=hc/λ --> E_ph= 3.61x10^-19 J
     1 μmol photons = 6.022x10^17 photons
@@ -88,8 +57,32 @@ def agricultural(
     url = {https://www.sciencedirect.com/science/article/pii/S016719871930131X},
     author = {Thomas Keller and Maria Sandin and Tino Colombi and Rainer Horn and Dani Or}
     }
-    
     """
+
+    # Define possible crops and their requirements
+    possible_crops = ["potatoes"]
+    crop_requirements = {
+        "potatoes": {
+            "stages": [
+                "flowering","fruiting", "dormant","dormant", "dormant", "dormant","dormant", "dormant", "dormant", 
+                "seedling", "vegetative", "vegetative",  
+            ],
+            "stage_ppfd_min": {
+                "dormant": 0,
+                "seedling": 100,
+                "vegetative": 200,
+                "flowering": 500,
+                "fruiting": 500
+            },
+            "stage_ppfd_max": {
+                "dormant": 0,  # Dormant period - no irradiation requirements
+                "seedling": 200,
+                "vegetative": 600,
+                "flowering": 600,
+                "fruiting": 600
+            }
+        }
+    }
 
     # Check if crop is valid
     if crop_type.lower() not in possible_crops:
@@ -106,24 +99,20 @@ def agricultural(
     max_req_kWm2 = [crop["stage_ppfd_max"][stage] * conversion_factor for stage in stages]
 
     # Compare actual irradiation with required range
-    impact = []
+    impact=[]
     for i, month in enumerate(months):
         if stages[i] == "dormant":
-            impact.append("Dormant period - No impact")
+            impact.append(0)
         else:
             if irradiation_crop[i] < min_req_kWm2[i]:
-                impact.append("Crop yield reduced (too low irradiation)")
-            elif irradiation_crop[i] > max_req_kWm2[i]:
-                impact.append("Crop yield may be stressed (too high irradiation)")
+                impact.append(irradiation_crop[i] - min_req_kWm2[i])
+            elif irradiation_crop[i] > max_req_kWm2[i]:     
+                impact.append(irradiation_crop[i] - max_req_kWm2[i])
             else:
-                impact.append("Yield remains optimal")
+                impact.append(0)
 
     # Build DataFrame
-    crop_impact = pd.DataFrame({
-        "Month": months,
-        "Irradiation [kW/m²]": irradiation_crop,
-        "Crop impact": impact
-    })
+    crop_impact = pd.DataFrame(impact, columns=["Crop impact [ ]"], index=months)
 
     return crop_impact
 
