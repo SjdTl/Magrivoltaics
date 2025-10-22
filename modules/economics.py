@@ -8,9 +8,7 @@ months = [
 
 def economics(area=10000,
               coverage: float =0.5,
-              row_width : float = 2*2.384,
               panel_area : float = 1.7,
-              height_panel: float = 2,
               energy = np.linspace(5,20,12),
               subsidy=0.0,
               lifetime : float = 30):
@@ -42,7 +40,7 @@ def economics(area=10000,
     -------
     single_parameters : pd.Dataframe
         Parameters of the plant that hold for the entire lifetime
-        |   | LCEO [EUR/kWh] | ROI | Operation & Maintenance cost [EUR/y] | Energy price [EUR/kWh] |
+        |   | LCEO [EUR/MWh] | ROI | Operation & Maintenance cost [EUR/y] | Energy price [EUR/kWh] |
         | - | -------------- | --- | ------------------------------------ | ---------------------- |
         | 0 | xxx            | xxx | xxx                                  | xxx                    |
     
@@ -53,9 +51,8 @@ def economics(area=10000,
     """
 
     # area calculations
-    panel_area_m2 = 2.58
     area_pv = area * coverage
-    n_panels = area_pv / panel_area_m2
+    n_panels = area_pv / panel_area
     p_sys_kW = (n_panels * 580) / 1000  # total system capacity [kW]
 
     # estimated CAPEX costs 
@@ -73,14 +70,14 @@ def economics(area=10000,
     alpha =  (r * (1 + r) ** lifetime) / ((1 + r) ** lifetime - 1)
     #LCOE 
     annual_energy_kWh = np.sum(energy)   # sum of 12 months
-    LCOE= ( (alpha * (CAPEX - subsidy))+ OM ) / annual_energy_kWh 
+    LCOE= ( (alpha * (CAPEX - subsidy))+ OM ) / (annual_energy_kWh)
     #ROI
     energy_price = 0.1301 #€/kWh
-    net_profit= (energy_price-LCOE)*annual_energy_kWh
+    net_profit= (energy_price-LCOE)*(annual_energy_kWh)
     ROI=(net_profit/CAPEX)*100
 
     single_parameters = pd.DataFrame({
-         "LCOE [EUR/kWh]" : [LCOE],
+         "LCOE [EUR/MWh]" : [LCOE*1e3],
          "ROI" : [ROI],
          "Operation & Maintenance cost [EUR/y]" : [OM],
          "Energy price [EUR/kWh]" : [energy_price],

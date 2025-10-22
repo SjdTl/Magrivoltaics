@@ -62,12 +62,12 @@ def interface(crop_type : str = "potatoes",
     df_energyUse = energy_usage()
     df_energyOut["Energy export [kWh]"] = df_energyOut["Energy output [kWh]"] - df_energyUse["Energy usage [kWh]"]
 
-    df_agricultural = agricultural(crop_type = crop_type, irradiation_crop= np.array(df_energyOut["Irradiation crops [kW/m^2]"]))
+    df_agricultural = agricultural(crop_type = crop_type, 
+                                   irradiation_crop= np.array(df_energyOut["Irradiation crops [kW/m^2]"]))
+    
     df_economicsSingle = economics(area = area,
-                                   coverage = 0.5,
-                                   row_width = row_width,
+                                   coverage = row_width/pitch,
                                    panel_area = panel_area,
-                                   height_panel =  height,
                                    energy = df_energyOut["Energy export [kWh]"],
                                    subsidy = 0.0,
                                    lifetime = lifetime)
