@@ -13,14 +13,13 @@ def energy_output(latitude: float = 35,
                   longitude : float = 15,
                   elevation : float = 10,
                   height : float = 2.5,
-                  azimuth : float = 10,
-                  tilt : float = 10,
+                  azimuth : float = 180,
+                  tilt : float = 30,
                   row_width : float = 2*2.384,
-                  pitch : float = 12,
-                  area : float = 100,
+                  pitch : float = 8,
+                  area : float = 10000,
                   panel_area : float = 1.7,
                   rated_power : float = 440,
-                  efficiency : float = 0.5,
                 ):
     """
     Description
@@ -49,8 +48,6 @@ def energy_output(latitude: float = 35,
         Rated power of the panels in Watt [W]
     panel_area : float
         Area of a single panel [m^2]
-    efficiency : float
-        Efficiency of the panels in fractions [ ]
 
     Returns
     -------
@@ -60,12 +57,7 @@ def energy_output(latitude: float = 35,
         | -------- | ------------------- | ---------------------            | ------------------------------       |
         | January  | xxx                 | xxx                              | xxx                                  |
         | February | xxx                 | xxx                              | xxx                                  |
-    
-    Raises
-    ------
-    ValueError
-        Value error for efficiency if they are not given in fractions
-    
+      
     Notes
     -----
     Do not consider on-site usage of energy
@@ -79,10 +71,7 @@ def energy_output(latitude: float = 35,
         | January  | xxx                 | xxx                        | xxx                            |
         | February | xxx                 | xxx                        | xxx                            |
     """
-    if efficiency > 1 or efficiency < 0:
-        raise ValueError("Efficiency should be in fractions, ranging from 0.0 to 1.0")
-
-     # --- 1. Location and time setup (yearly hourly timeseries)
+    # --- 1. Location and time setup (yearly hourly timeseries)
     location = pvlib.location.Location(latitude, longitude, altitude=elevation)
     times = pd.date_range('2024-01-01', '2024-12-31 23:00', freq='1h', tz='UTC')
 
@@ -127,7 +116,7 @@ def energy_output(latitude: float = 35,
     )
 
     # --- 5. Apply efficiency and panel area scaling (optional realism)
-    power_kw = (power_dc * efficiency / 1000.0)
+    power_kw = (power_dc / 1000.0)
 
     # --- 6. Monthly aggregation
     monthly_avg_power = power_kw.resample('ME').mean()
