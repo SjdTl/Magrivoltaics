@@ -112,7 +112,7 @@ def agricultural(
                 impact.append(0)
 
     # Build DataFrame
-    crop_impact = pd.DataFrame(impact, columns=["Crop impact [ ]"], index=months)
+    crop_impact = pd.DataFrame(impact, columns=["Crop impact [kW/m^2]"], index=months)
 
     return crop_impact
 

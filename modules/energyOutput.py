@@ -53,23 +53,14 @@ def energy_output(latitude: float = 35,
     -------
     energy : pd.Dataframe
         Energy per month in a pandas dataframe AND the solar irradiation according to the following format:
-        | Month    | Energy output [kWh] | Irradiation crop [kWh/m^2/month] | Irradiation panel [kWh/m^2/month]    |
-        | -------- | ------------------- | ---------------------            | ------------------------------       |
+        | Month    | Energy output [kWh] | Irradiation crops [kW/m^2]       | Irradiation panels [kW/m^2]          |
+        | -------- | ------------------- | -------------------------------- | ------------------------------------ |
         | January  | xxx                 | xxx                              | xxx                                  |
         | February | xxx                 | xxx                              | xxx                                  |
       
     Notes
     -----
     Do not consider on-site usage of energy
-
-    Examples
-    --------
-    >>> database = energy_output(coverage=0.4)
-    >>> print(database)
-        | Month    | Energy output [kWh] | Irradiation crop [kWh/m^2] | Irradiation panel [kWh/m^2]    |
-        | -------- | ------------------- | ---------------------      | ------------------------------ |
-        | January  | xxx                 | xxx                        | xxx                            |
-        | February | xxx                 | xxx                        | xxx                            |
     """
     # --- 1. Location and time setup (yearly hourly timeseries)
     location = pvlib.location.Location(latitude, longitude, altitude=elevation)
@@ -94,10 +85,11 @@ def energy_output(latitude: float = 35,
         dni_extra=dni_extra,
         model='haydavies'
     )
+    
 
     panel_irradiance_Wm2 = poa['poa_global']
     panel_irradiance_kWhm2 = panel_irradiance_Wm2 / 1000.0
-    monthly_panel_irradiance = panel_irradiance_kWhm2.resample('ME').sum()
+    monthly_panel_irradiance = panel_irradiance_kWhm2.resample('ME').mean()
     monthly_panel_irradiance.index = months
 
     # --- 4. PVWatts power model
@@ -119,7 +111,7 @@ def energy_output(latitude: float = 35,
     power_kw = (power_dc / 1000.0)
 
     # --- 6. Monthly aggregation
-    monthly_avg_power = power_kw.resample('ME').mean()
+    monthly_avg_power = power_kw.resample('ME').sum()
     monthly_avg_power.index = months
 
     tracking_orientations = pvlib.tracking.singleaxis(
@@ -150,17 +142,13 @@ def energy_output(latitude: float = 35,
                             + vf_ground_sky * clearsky['dhi'])
     
     crop_irradiance_kWhm2 = crop_avg_irradiance / 1000.0
-    monthly_crop_irradiance = crop_irradiance_kWhm2.resample('ME').sum()
+    monthly_crop_irradiance = crop_irradiance_kWhm2.resample('ME').mean()
     monthly_crop_irradiance.index = months
-    irradiance_df = pd.DataFrame({
-        'Month': monthly_crop_irradiance.index,
-        'Crop Irradiance (kWh/m²/month)': monthly_crop_irradiance.values
-    })
 
     result = pd.DataFrame({
-    'Average Power (kW)': monthly_avg_power.values,
-    'Irradiance panel level (kWh/m²/month)': monthly_panel_irradiance.values,
-    'Irradiance crop level (kWh/m²/month)': monthly_crop_irradiance.values
+    'Energy output [kWh]': monthly_avg_power.values,
+    'Irradiation panels [kW/m^2]': monthly_panel_irradiance.values,
+    'Irradiation crops [kW/m^2]': monthly_crop_irradiance.values
     }, index=months)
     return result
 

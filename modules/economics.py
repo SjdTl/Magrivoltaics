@@ -8,8 +8,8 @@ months = [
 
 def economics(area=10000,
               coverage: float =0.5,
-              rows: float =10,
-              length_rows: float =1000,
+              row_width : float = 2*2.384,
+              panel_area : float = 1.7,
               height_panel: float = 2,
               energy = np.linspace(5,20,12),
               subsidy=0.0,
@@ -80,7 +80,7 @@ def economics(area=10000,
     ROI=(net_profit/CAPEX)*100
 
     single_parameters = pd.DataFrame({
-        "LCOE [EUR/kWh]" : [LCOE],
+         "LCOE [EUR/kWh]" : [LCOE],
          "ROI" : [ROI],
          "Operation & Maintenance cost [EUR/y]" : [OM],
          "Energy price [EUR/kWh]" : [energy_price],
