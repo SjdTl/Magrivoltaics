@@ -12,11 +12,14 @@ months = [
 def energy_output(latitude: float = 35, 
                   longitude : float = 15,
                   elevation : float = 10,
+                  height : float = 2.5,
                   azimuth : float = 10,
                   tilt : float = 10,
-                  area : float = 10,
-                  coverage : float = 0.5,
-                  rated_power : float = 10,
+                  row_width : float = 2*2.384,
+                  pitch : float = 12,
+                  area : float = 100,
+                  panel_area : float = 1.7,
+                  rated_power : float = 440,
                   efficiency : float = 0.5,
                 ):
     """
@@ -32,16 +35,20 @@ def energy_output(latitude: float = 35,
         Longitude of the farm
     elevation : float 
         Elevation of the farm
+    height : float
+        Height of the panels above the crops [m]
     azimuth : float
         Azimuth in degrees [deg]
     tilt : float 
         Angle in degrees [deg]
+    row width : float
+        Width of each row of panels [m]
     area : float
         Area in m2 [m^2]
-    coverage : float
-        How much the panels cover the area in fractions [ ]
     rated_power : float
         Rated power of the panels in Watt [W]
+    panel_area : float
+        Area of a single panel [m^2]
     efficiency : float
         Efficiency of the panels in fractions [ ]
 
@@ -49,15 +56,15 @@ def energy_output(latitude: float = 35,
     -------
     energy : pd.Dataframe
         Energy per month in a pandas dataframe AND the solar irradiation according to the following format:
-        | Month    | Energy output [kWh] | Irradiation crop [kWh/m^2] | Irradiation panel [kWh/m^2]    |
-        | -------- | ------------------- | ---------------------      | ------------------------------ |
-        | January  | xxx                 | xxx                        | xxx                            |
-        | February | xxx                 | xxx                        | xxx                            |
+        | Month    | Energy output [kWh] | Irradiation crop [kWh/m^2/month] | Irradiation panel [kWh/m^2/month]    |
+        | -------- | ------------------- | ---------------------            | ------------------------------       |
+        | January  | xxx                 | xxx                              | xxx                                  |
+        | February | xxx                 | xxx                              | xxx                                  |
     
     Raises
     ------
     ValueError
-        Value error for efficiency and coverage if they are not given in fractions
+        Value error for efficiency if they are not given in fractions
     
     Notes
     -----
@@ -74,8 +81,6 @@ def energy_output(latitude: float = 35,
     """
     if efficiency > 1 or efficiency < 0:
         raise ValueError("Efficiency should be in fractions, ranging from 0.0 to 1.0")
-    if coverage > 1 or coverage < 0:
-        raise ValueError("Coverage should be in fractions, ranging from 0.0 to 1.0")
 
      # --- 1. Location and time setup (yearly hourly timeseries)
     location = pvlib.location.Location(latitude, longitude, altitude=elevation)
@@ -86,10 +91,7 @@ def energy_output(latitude: float = 35,
     dni_extra = pvlib.irradiance.get_extra_radiation(times)
 
     # --- 2. Ground coverage ratio from coverage input
-    gcr = coverage  # directly use user-specified ratio
-    height = 2.5    # assumed tracker height for agrivoltaic system
-    row_width = 2*2.384 # assumed row_width 
-    pitch = row_width / gcr
+    gcr = row_width / pitch
 
     # --- 3. Simple fixed-tilt POA model
     poa = pvlib.irradiance.get_total_irradiance(
@@ -104,13 +106,19 @@ def energy_output(latitude: float = 35,
         model='haydavies'
     )
 
+    panel_irradiance_Wm2 = poa['poa_global']
+    panel_irradiance_kWhm2 = panel_irradiance_Wm2 / 1000.0
+    monthly_panel_irradiance = panel_irradiance_kWhm2.resample('ME').sum()
+    monthly_panel_irradiance.index = months
+
     # --- 4. PVWatts power model
     temp_air = 20  # °C, assumed
     temp_cell = pvlib.temperature.faiman(
         poa_global=poa['poa_global'], temp_air=temp_air
     )
     gamma_pdc = -0.004  # power temp coefficient
-    N_modules = 100
+
+    N_modules = int((area * gcr) / panel_area)
     power_dc = pvlib.pvsystem.pvwatts_dc(
         effective_irradiance=poa['poa_global'],
         temp_cell=temp_cell,
@@ -118,26 +126,54 @@ def energy_output(latitude: float = 35,
         gamma_pdc=gamma_pdc
     )
 
-     # --- 5. Apply efficiency and panel area scaling (optional realism)
+    # --- 5. Apply efficiency and panel area scaling (optional realism)
     power_kw = (power_dc * efficiency / 1000.0)
 
     # --- 6. Monthly aggregation
     monthly_avg_power = power_kw.resample('ME').mean()
-    monthly_avg_power.index = monthly_avg_power.index.strftime('%B')
+    monthly_avg_power.index = months
 
-    result = pd.DataFrame({
-        'Month': monthly_avg_power.index,
-        'Average Power (kW)': monthly_avg_power.values
+    tracking_orientations = pvlib.tracking.singleaxis(
+        apparent_zenith=solpos['apparent_zenith'],
+        solar_azimuth=solpos['azimuth'],
+        axis_azimuth=azimuth,
+        max_angle=tilt,
+        backtrack=True,
+        gcr=gcr,
+    )
+    vf_ground_sky = pvlib.bifacial.utils.vf_ground_sky_2d_integ(
+    surface_tilt=tracking_orientations['surface_tilt'],
+    gcr=gcr,
+    height=height,
+    pitch=pitch,
+    )
+
+    unshaded_ground_fraction = pvlib.bifacial.utils._unshaded_ground_fraction(
+        surface_tilt=tracking_orientations['surface_tilt'],
+        surface_azimuth=tracking_orientations['surface_azimuth'],
+        solar_zenith=solpos['apparent_zenith'],
+        solar_azimuth=solpos['azimuth'],
+        gcr=gcr,
+    )
+
+    crop_avg_irradiance = (unshaded_ground_fraction * clearsky['dni']
+                           * cosd(solpos['apparent_zenith'])
+                            + vf_ground_sky * clearsky['dhi'])
+    
+    crop_irradiance_kWhm2 = crop_avg_irradiance / 1000.0
+    monthly_crop_irradiance = crop_irradiance_kWhm2.resample('ME').sum()
+    monthly_crop_irradiance.index = months
+    irradiance_df = pd.DataFrame({
+        'Month': monthly_crop_irradiance.index,
+        'Crop Irradiance (kWh/m²/month)': monthly_crop_irradiance.values
     })
 
+    result = pd.DataFrame({
+    'Average Power (kW)': monthly_avg_power.values,
+    'Irradiance panel level (kWh/m²/month)': monthly_panel_irradiance.values,
+    'Irradiance crop level (kWh/m²/month)': monthly_crop_irradiance.values
+    }, index=months)
     return result
-    # energy = 12*[12]
-    # irradiation_panel = 12*[25]
-    # irradiation_crop = 12*[20]
-
-    # energy = pd.DataFrame(np.transpose([energy, irradiation_crop, irradiation_panel]), 
-    #                       columns=["Energy output [kWh]", "Irradiation crop [kWh/m^2]", "Irradiation panel [kWh/m^2]"], 
-    #                       index=months)
 
 if __name__ == '__main__':
     database = energy_output()
