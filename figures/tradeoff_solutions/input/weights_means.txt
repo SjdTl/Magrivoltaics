@@ -1,0 +1,19 @@
+{\small\begin{longtblr}[
+  label = weights_means,
+  entry = none,
+  caption = {Weights for different cases}
+  ]{
+  width = {\linewidth},
+  colspec = {Q[40, font=\bfseries]Q[20, c]Q[20, c]Q[20, c]Q[20, c]Q[20, c]Q[20, c]Q[20, c]},
+  column{2-Z} = {cmd=\colornum},
+  abovesep=1pt, belowsep=1pt, leftsep=0.5pt, rightsep=0.5pt,
+}
+\hline Criterion & Balanced & Environment & Profit & Longevity & Energy & Agriculture & Social \\ \hline
+C1 Environmental    & 3 & 5 & 2 & 4 & 2 & 4 & 4 \\
+C2 Economical       & 2 & 2 & 5 & 2 & 5 & 2 & 2 \\
+C3 Performance      & 4 & 2 & 5 & 4 & 5 & 4 & 4 \\
+C4 Grid \& PQ       & 5 & 5 & 5 & 5 & 5 & 5 & 5 \\
+C5 Agri-operability & 5 & 4 & 4 & 4 & 2 & 5 & 4 \\
+C6 Schedule \& Compl& 2 & 2 & 1 & 2 & 2 & 2 & 2 \\
+C7 Social \& Visual & 4 & 4 & 1 & 4 & 1 & 4 & 5 \\ \hline
+\end{longtblr}}

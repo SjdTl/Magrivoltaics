@@ -1,0 +1,19 @@
+{\small\begin{longtblr}[
+  label = tradeoff_maintenance,
+  entry = none,
+  caption = {Tradeoff for the different solutions: maintenance}
+  ]{
+  width = {\linewidth},
+  colspec = {Q[47, font=\bfseries]Q[20, c]Q[20, c]Q[20, c]Q[20, c]Q[20, c]Q[20, c]},
+  column{2-Z} = {cmd=\colornum},
+  abovesep=1pt, belowsep=1pt, leftsep=0.5pt, rightsep=0.5pt,
+}
+\hline Criterion    &S1 &S2 &S3 &S4 &S5 &S6 \\ \hline
+C1 Environmental    & 1 & 2 & 2 & 2 & 2 & 2 \\
+C2 Economical       & 2 & 2 & 3 & 2 & 2 & 4\\
+C3 Performance      & 2 & 3 & 2 & 2 & 2 & 1\\
+C4 Grid \& PQ       & 0 & 0 & 0 & 0 & 0 & 0 \\
+C5 Agri-operability & 2 & 3 & 2 & 2 & 2 & 2 \\
+C6 Schedule \& Compl& 1 & 1 & 3 & 3 & 1 & 1\\
+C7 Social \& Visual & 2 & 3 & 2 & 2 & 2 & 1 \\ \hline
+\end{longtblr}}

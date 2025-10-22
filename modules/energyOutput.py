@@ -13,7 +13,7 @@ def energy_output(latitude: float = 35,
                   longitude : float = 15,
                   elevation : float = 10,
                   azimuth : float = 10,
-                  angle : float = 10,
+                  tilt : float = 10,
                   area : float = 10,
                   coverage : float = 0.5,
                   rated_power : float = 10,
@@ -34,7 +34,7 @@ def energy_output(latitude: float = 35,
         Elevation of the farm
     azimuth : float
         Azimuth in degrees [deg]
-    angle : float 
+    tilt : float 
         Angle in degrees [deg]
     area : float
         Area in m2 [m^2]
@@ -48,11 +48,11 @@ def energy_output(latitude: float = 35,
     Returns
     -------
     energy : pd.Dataframe
-        Energy per month in a pandas dataframe according to the following format:
-        | Month    | Energy output [kWh] | 
-        | -------- | ------------------- |
-        | January  | xxx kWh             | 
-        | February | xxx kWh             | 
+        Energy per month in a pandas dataframe AND the solar irradiation according to the following format:
+        | Month    | Energy output [kWh] | Irradiation crop [kWh/m^2] | Irradiation panel [kWh/m^2]    |
+        | -------- | ------------------- | ---------------------      | ------------------------------ |
+        | January  | xxx                 | xxx                        | xxx                            |
+        | February | xxx                 | xxx                        | xxx                            |
     
     Raises
     ------
@@ -67,21 +67,17 @@ def energy_output(latitude: float = 35,
     --------
     >>> database = energy_output(coverage=0.4)
     >>> print(database)
-        | Month    | Energy output [kWh] |
-        | -------- | ------------------- |
-        | January  | xxx kWh             | 
-        | February | xxx kWh             | 
+        | Month    | Energy output [kWh] | Irradiation crop [kWh/m^2] | Irradiation panel [kWh/m^2]    |
+        | -------- | ------------------- | ---------------------      | ------------------------------ |
+        | January  | xxx                 | xxx                        | xxx                            |
+        | February | xxx                 | xxx                        | xxx                            |
     """
     if efficiency > 1 or efficiency < 0:
         raise ValueError("Efficiency should be in fractions, ranging from 0.0 to 1.0")
     if coverage > 1 or coverage < 0:
         raise ValueError("Coverage should be in fractions, ranging from 0.0 to 1.0")
-    """
-    Estimate monthly average power output (kW) for an agrivoltaic PV system.
-    Based on pvlib's irradiance and PVWatts models.
-    """
 
-    # --- 1. Location and time setup (yearly hourly timeseries)
+     # --- 1. Location and time setup (yearly hourly timeseries)
     location = pvlib.location.Location(latitude, longitude, altitude=elevation)
     times = pd.date_range('2024-01-01', '2024-12-31 23:00', freq='1h', tz='UTC')
 
@@ -97,7 +93,7 @@ def energy_output(latitude: float = 35,
 
     # --- 3. Simple fixed-tilt POA model
     poa = pvlib.irradiance.get_total_irradiance(
-        surface_tilt=angle,
+        surface_tilt=tilt,
         surface_azimuth=azimuth,
         dni=clearsky['dni'],
         ghi=clearsky['ghi'],
@@ -122,7 +118,7 @@ def energy_output(latitude: float = 35,
         gamma_pdc=gamma_pdc
     )
 
-    # --- 5. Apply efficiency and panel area scaling (optional realism)
+     # --- 5. Apply efficiency and panel area scaling (optional realism)
     power_kw = (power_dc * efficiency / 1000.0)
 
     # --- 6. Monthly aggregation
@@ -135,6 +131,13 @@ def energy_output(latitude: float = 35,
     })
 
     return result
+    # energy = 12*[12]
+    # irradiation_panel = 12*[25]
+    # irradiation_crop = 12*[20]
+
+    # energy = pd.DataFrame(np.transpose([energy, irradiation_crop, irradiation_panel]), 
+    #                       columns=["Energy output [kWh]", "Irradiation crop [kWh/m^2]", "Irradiation panel [kWh/m^2]"], 
+    #                       index=months)
 
 if __name__ == '__main__':
     database = energy_output()

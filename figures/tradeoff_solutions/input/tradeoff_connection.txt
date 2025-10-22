@@ -1,0 +1,19 @@
+{\small\begin{longtblr}[
+  label = tradeoff_connection,
+  entry = none,
+  caption = {Tradeoff for the different solutions: connection}
+  ]{
+  width = {\linewidth},
+  colspec = {Q[47, font=\bfseries]Q[20, c]Q[20, c]Q[20, c]Q[20, c]Q[20, c]Q[20, c]},
+  column{2-Z} = {cmd=\colornum},
+  abovesep=1pt, belowsep=1pt, leftsep=0.5pt, rightsep=0.5pt,
+}
+\hline Criterion & S1 & S2 & S3 & S4 & S5 & S6 \\ \hline
+C1 Environmental    & 1 & 1 & 3 & 1 & 1 & 3 \\
+C2 Economical       & 2 & 2 & 2 & 2 & 3 & 2\\
+C3 Performance      & 0 & 0 & 0 & 0 & 0 & 0\\
+C4 Grid \& PQ       & 1 & 1 & 1 & 2 & 2 & 2\\
+C5 Agri-operability & 1 & 1 & 3 & 1 & 1 & 3\\
+C6 Schedule \& Compl& 3 & 3 & 2 & 2 & 2 & 3 \\
+C7 Social \& Visual & 1 & 1 & 4 & 1 & 1 & 5\\ \hline
+\end{longtblr}}

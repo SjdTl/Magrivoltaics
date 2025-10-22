@@ -44,13 +44,7 @@ def energy_usage(something : float = 10,
         | February | xxx kWh       | 
     """
     
-
-
-
-
-
-    
-    energy = 12*[10]
+    energy = 12*[0]
     energy = pd.DataFrame(energy, columns=["Energy usage [kWh]"], index=months)
     return energy
 
