@@ -6,8 +6,7 @@ months = [
 ]
 
 def agricultural(
-    irradiation_panels=None,
-    irradiation_crop=None,
+    irradiation_crop=[20] * 12,
     crop_type="potatoes"
 ):
     """
@@ -17,8 +16,6 @@ def agricultural(
 
     Parameters
     ----------
-    irradiation_panels : np.array 
-        Energy output of the solar array per month [kWh]
     irradiation_crop : np.array
        Irradiation per m^2 [kW/m2] still arriving at crop 
     crop_type : str
@@ -36,15 +33,8 @@ def agricultural(
         If crop_type not recognized.
     """
 
-    # Default values
-    if irradiation_panels is None:
-        irradiation_panels = [10] * 12
-    if irradiation_crop is None:
-        irradiation_crop = [20] * 12
-
     # Define possible crops and their requirements
     possible_crops = ["potatoes"]
-
     crop_requirements = {
         "potatoes": {
             "stages": [
@@ -105,17 +95,17 @@ def agricultural(
     max_req_kWm2 = [crop["stage_ppfd_max"][stage] * conversion_factor for stage in stages]
 
     # Compare actual irradiation with required range
-    impact = []
+    impact=[]
     for i, month in enumerate(months):
         if stages[i] == "dormant":
-            impact.append("Dormant period - No impact")
+            impact.append(0)
         else:
             if irradiation_crop[i] < min_req_kWm2[i]:
-                impact.append("Crop yield reduced (too low irradiation)")
-            elif irradiation_crop[i] > max_req_kWm2[i]:
-                impact.append("Crop yield may be stressed (too high irradiation)")
+                impact.append(irradiation_crop[i] - min_req_kWm2[i])
+            elif irradiation_crop[i] > max_req_kWm2[i]:     
+                impact.append(irradiation_crop[i] - max_req_kWm2[i])
             else:
-                impact.append("Yield remains optimal")
+                impact.append(0)
 
     # Build DataFrame
     crop_impact = pd.DataFrame(impact, columns=["Crop impact [ ]"], index=months)
