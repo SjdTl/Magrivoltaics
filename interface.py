@@ -47,7 +47,7 @@ def interface(crop_type : str = "potatoes",
                                    length_rows =1000,
                                    height_panel = 2,
                                    energy = np.linspace(5,20,12),
-                                   subsidy=0.0,
+                                   subsidy=0,
                                    lifetime = 30)
     
 

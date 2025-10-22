@@ -37,9 +37,8 @@ draw]
         \draw[->] (energy_used.east -| subtract.south) -- (energy_used.east -| \outcoord, 0) node[anchor=west] {Energy usage [kWh]};
         \draw[->] (subtract.east -| economic.north) -- (subtract.east -| \outcoord, 0) node[anchor=west] {Energy export [kWh]};
         \draw[->] ($(energy_out.east -| subtract.north)+(0,-0.5)$) -- ($(energy_out.east -| \outcoord, 0)+(0,-0.5)$) node[anchor=west] {Energy output [kWh]};
-        \draw[->] ($(energy_out.east)+(0,0.5)$)  node[anchor=south west] {irradiation} -| ($(energy_out.north -| economic.north)+(0.5,-0.5)$) node[pos=0.3] {\slash} node(agriculture) [anchor=south, block, minimum height=3cm, xshift=-0.5cm] {Agriculture};
-        \draw[->] ($(energy_out.east -| agriculture.north)+(-0.5,-0.5)$) -- ($(agriculture.south)+(-0.5,0)$);
-        \draw[->] ($(energy_out.east -| agriculture.south)+(0.5,0.5)$) -- ($(energy_out.east -| \outcoord,0)+(0,0.5)$) node[anchor=west] {Irradiation [kWh/m$^2$]};
+        \draw[->] ($(energy_out.east)+(0,0.5)$)  node[anchor=south west] {irradiation} -| ($(energy_out.north -| economic.north)+(0,-0.5)$) node[pos=0.3] {\slash} node(agriculture) [anchor=south, block, minimum height=3cm] {Agriculture};
+        \draw[->] ($(energy_out.east -| agriculture.south)+(0,0.5)$) -- ($(energy_out.east -| \outcoord,0)+(0,0.5)$) node[anchor=west] {Irradiation [kWh/m$^2$]};
         \node[anchor= south east, text =blue] at (agriculture.south east) {\footnotesize \href{https://github.com/SjdTl/Magrivoltaics/blob/main/modules/agriculture.py}{agriculture.py}};
         
         % ECONOMIC INPUTS
@@ -53,7 +52,7 @@ draw]
         \def\x{4}%
         \path (economic.north east)--(economic.south east) foreach \j in {1,...,\x} {%
         coordinate [pos=1/(\x + 1)*\j] (y\j)};%
-        \foreach \i/\name/\bus  in {1/LCOE/, 2/ROI/, 3/Maintenance cost [eur]/\slash, 4/Energy price [eur]/\slash}  %
+        \foreach \i/\name/\bus  in {1/LCOE/, 2/ROI/, 3/Maintenance cost [eur]/, 4/Energy price [eur]/}  %
         \draw[->] (y\i) -- (y\i -| \outcoord, 0) node[anchor=west] (x\i){\name} node[midway] {\bus};%
         
         % AGRICULTURAL INPUTS
@@ -66,18 +65,22 @@ draw]
         \def\x{1}%
         \path (agriculture.north east)--(agriculture.south east) foreach \j in {1,...,\x} {%
         coordinate [pos=1/(\x + 1)*\j] (y\j)};%
-        \foreach \i/\name/\bus  in {1/Crop impact [unit]/\slash}  %
+        \foreach \i/\name/\bus  in {1/Crop impact [kW\slash m$^2$]/\slash}  %
         \draw[->] (y\i) -- (y\i -| \outcoord, 0) node[anchor=west] (x\i){\name} node[midway] {\bus};%
           
       \end{scope}
       \draw[draw] ($(internals.north west)+(2.5,0.25)$) rectangle ($(internals.south east)+(-4,-0.25)$);
 
       \coordinate (corner) at ($(internals.south west) + (2.5,-0.25)$);
+      \coordinate (rightcorner) at ($(internals.south east) + (-2.5,-0.25)$);
       \node[anchor=south west, above right] at (corner) {\Large Interface \faPython};
 
       \begin{scope}[shift= {($(corner)+(0,-0.5)$)}]
           \draw[->] (0,0) -- +(1,0) node[midway] {\slash} node[anchor=west] {= monthly variable for the average year};  
           \draw[->] (0,-0.5) -- +(1,0) node[anchor=west] {= one time variable for the lifetime};  
+      \end{scope}
+      \begin{scope}[shift= {($(rightcorner)+(0,-0.5)$)}]
+        \node at (0,0) {\footnotesize Test};
       \end{scope}
     \end{tikzpicture}
 
