@@ -17,10 +17,10 @@ def agricultural(
 
     Parameters
     ----------
-    irradiation_panels : list of float
+    irradiation_panels : np.array 
         Energy output of the solar array per month [kWh]
-    irradiation_crop : list of float
-       Irradiation per m² [kW/m²] still arriving at the crop 
+    irradiation_crop : np.array
+       Irradiation per m^2 [kW/m2] still arriving at crop 
     crop_type : str
         Crop type (currently supports only 'potatoes')
 
