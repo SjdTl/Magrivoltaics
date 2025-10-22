@@ -50,7 +50,6 @@ def energy_output(latitude: float = 10,
         | -------- | ------------------- | ---------------------      | ------------------------------ |
         | January  | xxx                 | xxx                        | xxx                            |
         | February | xxx                 | xxx                        | xxx                            |
-    Irradiation is the 
     
     Raises
     ------

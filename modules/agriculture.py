@@ -16,9 +16,9 @@ def agricultural(irradiation_panels = 12*[10],
     Parameters
     ----------
     irradiation_panels : np.array 
-        Energy output of the solar array per month [kWh]
+        Energy output of the solar array per month [kWh/m^2]
     irradiation_crop : np.array
-       Irradiation per m^2 [kW/m2] still arriving at crop 
+       Irradiation per m^2 [kWh/m2] still arriving at crop 
     crop_type : str
         Crop type
 
