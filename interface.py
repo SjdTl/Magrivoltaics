@@ -31,17 +31,44 @@ def interface(crop_type : str = "potatoes",
     ----------
     crop_type : string
         Crop used
+    latitude : float
+        Latitude of the farm
+    longitude : float
+        Longitude of the farm
+    elevation : float 
+        Elevation of the farm
+    height : float
+        Height of the panels above the crops [m]
+    azimuth : float
+        Azimuth in degrees [deg]
+    tilt : float 
+        Angle in degrees [deg]
+    row width : float
+        Width of each row of panels [m]
     area : float
-        Area covered by the solar panels in m^2
+        Area in m2 [m^2]
+    rated_power : float
+        Rated power of the panels in Watt [W]
+    panel_area : float
+        Area of a single panel [m^2]
+    lifetime : float 
+        Lifetime of the system in years
 
     Returns
     -------
     monthly_df : pd.Dataframe
         Dataframe with all the monthly parameters:
+        | Month    | Energy Output [kWh] | Irradiation Panels [kW/m^2] | Irradiation Crops [kW/m^2] | Energy Export [kWh] | Energy Usage [kWh] | Crop Impact [kW/m^2] |
+        | -------- | ------------------- | --------------------------- | -------------------------- | ------------------- | ------------------ | -------------------- |
+        | January  | 237886.351620       | 0.221792                    | 0.090966                   | 237886.351620       | 0                  | -0.017534            |
+        | February | 259009.630191       | 0.260392                    | 0.109855                   | 259009.630191       | 0                  | 0.000000             |
 
     single_df : pd.Dataframe
         Dataframe with all the single-time parameters (that hold for the entire year or lifetime)
-
+        |   | LCOE [EUR/MWh] | ROI      | Operation & Maintenance cost [EUR/y] | Energy price [EUR/kWh] |
+        | - | -------------- | -------- | ------------------------------------ | ---------------------- |
+        | 0 | 69.944184      | 5.556185 | 71199.264706                         | 0.1301                 |
+        
     Notes
     -----
     See overview.svg
