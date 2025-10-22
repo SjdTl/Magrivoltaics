@@ -28,7 +28,7 @@ def agricultural(
     -------
     crop_impact : pd.DataFrame
         DataFrame showing the crop impact by month:
-            | Month    | Irradiation [kW/m²] | Crop impact |
+            | Month    | Crop impact |
     
     Raises
     ------
@@ -118,11 +118,7 @@ def agricultural(
                 impact.append("Yield remains optimal")
 
     # Build DataFrame
-    crop_impact = pd.DataFrame({
-        "Month": months,
-        "Irradiation [kW/m²]": irradiation_crop,
-        "Crop impact": impact
-    })
+    crop_impact = pd.DataFrame(impact, columns=["Crop impact [ ]"], index=months)
 
     return crop_impact
 
