@@ -9,8 +9,8 @@ months = [
         "July", "August", "September", "October", "November", "December"
     ]
 
-def energy_output(latitude: float = 10, 
-                  longitude : float = 10,
+def energy_output(latitude: float = 35, 
+                  longitude : float = 15,
                   elevation : float = 10,
                   azimuth : float = 10,
                   tilt : float = 10,
@@ -18,7 +18,7 @@ def energy_output(latitude: float = 10,
                   coverage : float = 0.5,
                   rated_power : float = 10,
                   efficiency : float = 0.5,
-                  ):
+                ):
     """
     Description
     -----------
