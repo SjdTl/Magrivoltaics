@@ -6,8 +6,8 @@ months = [
 ]
 
 def agricultural(
+    crop_type="potatoes",
     irradiation_crop=[20] * 12,
-    crop_type="potatoes"
 ):
     """
     Description
@@ -86,7 +86,7 @@ def agricultural(
 
     # Check if crop is valid
     if crop_type.lower() not in possible_crops:
-        raise ValueError(f"Crop type not recognized. Choose one of: {possible_crops}")
+        raise ValueError(f"Crop type {crop_type.lower()} not recognized. Choose one of: {possible_crops}")
 
     # Conversion factor: 1 μmol/m²/s = 0.000217 kW/m²
     conversion_factor = 0.000217

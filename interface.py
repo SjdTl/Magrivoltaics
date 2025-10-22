@@ -4,6 +4,7 @@ from modules.energyUsage import energy_usage
 from modules.economics import economics
 from modules.agriculture import agricultural
 import os as os
+import matplotlib.pyplot as plt
 import numpy as np
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -68,7 +69,7 @@ def interface(crop_type : str = "potatoes",
         |   | LCOE [EUR/MWh] | ROI      | Operation & Maintenance cost [EUR/y] | Energy price [EUR/kWh] |
         | - | -------------- | -------- | ------------------------------------ | ---------------------- |
         | 0 | 69.944184      | 5.556185 | 71199.264706                         | 0.1301                 |
-        
+
     Notes
     -----
     See overview.svg
@@ -104,6 +105,32 @@ def interface(crop_type : str = "potatoes",
 
     return monthly_df, single_df
 
+def vary_energy_output():
+    areas = np.linspace(10,1e7, 10)
+    monthly_dfs = []
+    single_dfs = []
+
+    for area in areas:
+        monthly_df, single_df = interface(area=area)
+        monthly_dfs.append(monthly_df)
+        single_dfs.append(single_df)
+
+    energies = [db["Energy export [kWh]"].mean() for db in monthly_dfs]
+    
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    savefile = os.path.join(dir_path, f"")
+    
+    
+    fig, ax = plt.subplots()
+    ax.plot(areas, energies, label="")
+    
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_title("")
+    plt.show()
+    # fig.savefig(f"{savefile}.svg", transparent=True)
+
+
 def main():
     montly_df, single_df = interface()
     df_name = os.path.join(dir_path, "output", f"total_df_monthly.csv")
@@ -113,5 +140,5 @@ def main():
     single_df.to_csv(df_name)
     print(single_df)
 
-
-main()
+vary_energy_output()
+# main()
