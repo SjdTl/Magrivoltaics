@@ -79,9 +79,11 @@ def interface(crop_type : str = "potatoes",
 
 def main():
     montly_df, single_df = interface()
-    df_name = os.path.join(dir_path, "output", f"total_df.csv")
+    df_name = os.path.join(dir_path, "output", f"total_df_monthly.csv")
     montly_df.to_csv(df_name)
     print(montly_df)
+    df_name = os.path.join(dir_path, "output", f"total_df_onetime.csv")
+    single_df.to_csv(df_name)
     print(single_df)
 
 
