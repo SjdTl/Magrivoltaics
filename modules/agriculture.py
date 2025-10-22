@@ -48,9 +48,8 @@ def agricultural(
     crop_requirements = {
         "potatoes": {
             "stages": [
-                "dormant", "dormant", "dormant", "dormant",
-                "seedling", "vegetative", "vegetative", "flowering",
-                "fruiting", "dormant", "dormant", "dormant"
+                "flowering","fruiting", "dormant","dormant", "dormant", "dormant","dormant", "dormant", "dormant", 
+                "seedling", "vegetative", "vegetative",  
             ],
             "stage_ppfd_min": {
                 "dormant": 0,
