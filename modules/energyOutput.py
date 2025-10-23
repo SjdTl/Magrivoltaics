@@ -114,24 +114,26 @@ def energy_output(latitude: float = 35,
     monthly_avg_power = power_kw.resample('ME').sum()
     monthly_avg_power.index = months
 
-    tracking_orientations = pvlib.tracking.singleaxis(
-        apparent_zenith=solpos['apparent_zenith'],
-        solar_azimuth=solpos['azimuth'],
-        axis_azimuth=azimuth,
-        max_angle=tilt,
-        backtrack=True,
-        gcr=gcr,
-    )
+    # tracking_orientations = pvlib.tracking.singleaxis(
+    #     apparent_zenith=solpos['apparent_zenith'],
+    #     solar_azimuth=solpos['azimuth'],
+    #     axis_azimuth=azimuth,
+    #     max_angle=tilt,
+    #     backtrack=True,
+    #     gcr=gcr,
+    # )
+    # print(tracking_orientations)
+
     vf_ground_sky = pvlib.bifacial.utils.vf_ground_sky_2d_integ(
-    surface_tilt=tracking_orientations['surface_tilt'],
+    surface_tilt=tilt,
     gcr=gcr,
     height=height,
     pitch=pitch,
     )
 
     unshaded_ground_fraction = pvlib.bifacial.utils._unshaded_ground_fraction(
-        surface_tilt=tracking_orientations['surface_tilt'],
-        surface_azimuth=tracking_orientations['surface_azimuth'],
+        surface_tilt=tilt,
+        surface_azimuth=azimuth,
         solar_zenith=solpos['apparent_zenith'],
         solar_azimuth=solpos['azimuth'],
         gcr=gcr,

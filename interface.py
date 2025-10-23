@@ -6,6 +6,8 @@ from modules.agriculture import agricultural
 import os as os
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
+import time
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def interface(crop_type : str = "potatoes", 
@@ -21,6 +23,7 @@ def interface(crop_type : str = "potatoes",
               panel_area : float = 1.7,
               rated_power : float = 440,
               lifetime : float = 30,
+              measure_time : bool = False,
               ):
     """
     Description
@@ -74,7 +77,8 @@ def interface(crop_type : str = "potatoes",
     -----
     See overview.svg
     """
-
+    if measure_time == True:
+        start_time = time.time()
     df_energyOut = energy_output(latitude = latitude, 
                                 longitude  = longitude,
                                 elevation  = elevation,
@@ -87,12 +91,27 @@ def interface(crop_type : str = "potatoes",
                                 panel_area  = panel_area,
                                 rated_power  = rated_power,
                                 )
+    if measure_time == True:
+        print("Energy out module")
+        print("--- %s seconds ---" % (time.time() - start_time))
+        start_time = time.time()
+        
     df_energyUse = energy_usage()
     df_energyOut["Energy export [kWh]"] = df_energyOut["Energy output [kWh]"] - df_energyUse["Energy usage [kWh]"]
+
+    if measure_time == True:
+        print("Energy use module")
+        print("--- %s seconds ---" % (time.time() - start_time))
+        start_time = time.time()
 
     df_agricultural = agricultural(crop_type = crop_type, 
                                    irradiation_crop= np.array(df_energyOut["Irradiation crops [kW/m^2]"]))
     
+    if measure_time == True:
+        print("Agricultural module")
+        print("--- %s seconds ---" % (time.time() - start_time))
+        start_time = time.time()
+
     df_economicsSingle = economics(area = area,
                                    coverage = row_width/pitch,
                                    panel_area = panel_area,
@@ -100,6 +119,10 @@ def interface(crop_type : str = "potatoes",
                                    subsidy = 0.0,
                                    lifetime = lifetime)
     
+    if measure_time == True:
+        print("Economics module")
+        print("--- %s seconds ---" % (time.time() - start_time))
+
     monthly_df = pd.concat([df_energyOut, df_energyUse, df_agricultural], axis=1)
     single_df = pd.concat([df_economicsSingle], axis=1)
 
@@ -110,7 +133,7 @@ def vary_energy_output():
     monthly_dfs = []
     single_dfs = []
 
-    for area in areas:
+    for area in tqdm(areas):
         monthly_df, single_df = interface(area=area)
         monthly_dfs.append(monthly_df)
         single_dfs.append(single_df)
@@ -132,7 +155,7 @@ def vary_energy_output():
 
 
 def main():
-    montly_df, single_df = interface()
+    montly_df, single_df = interface(measure_time = True, tilt=0, height=0.1)
     df_name = os.path.join(dir_path, "output", f"total_df_monthly.csv")
     montly_df.to_csv(df_name)
     print(montly_df)
@@ -140,5 +163,5 @@ def main():
     single_df.to_csv(df_name)
     print(single_df)
 
-vary_energy_output()
-# main()
+# vary_energy_output()
+main()

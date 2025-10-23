@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 
+
 months = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
