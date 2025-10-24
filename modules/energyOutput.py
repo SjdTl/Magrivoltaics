@@ -152,6 +152,30 @@ def energy_output(latitude: float = 35,
     'Irradiation panels [kW/m^2]': monthly_panel_irradiance.values,
     'Irradiation crops [kW/m^2]': monthly_crop_irradiance.values
     }, index=months)
+
+    plt.figure(figsize=(10, 6))
+
+    # (a) Irradiance comparison
+    plt.subplot(2, 1, 1)
+    plt.plot(result.index, result['Irradiation panels [kW/m^2]'],
+            marker='o', label='Panel level')
+    plt.plot(result.index, result['Irradiation crops [kW/m^2]'],
+            marker='s', label='Crop level')
+    plt.ylabel('Irradiance (kW/m²)')
+    plt.title('Monthly Irradiance (Panel vs Crop Level)')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+
+    # (b) Power output
+    plt.subplot(2, 1, 2)
+    plt.plot(result.index, result['Energy output [kWh]'],
+            marker='d', color='tab:green', label='Power Output')
+    plt.ylabel('Average Power (kW)')
+    plt.title('Monthly Average Power Output')
+    plt.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
     return result
 
 if __name__ == '__main__':
