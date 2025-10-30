@@ -25,7 +25,7 @@ def agricultural(
     -------
     crop_impact : pd.DataFrame
         DataFrame showing the crop impact by month:
-            | Month    | Crop impact [kW/m^2] |
+            | Month    | Crop impact [W/m^2]  |
             | -------- | -------------------- |
             | January  | xxx                  |
         A positive value +y indicates that there is y kW/m^2 too much radiance
@@ -112,9 +112,9 @@ def agricultural(
                 impact.append(0)
 
     # Build DataFrame
-    crop_impact = pd.DataFrame(impact, columns=["Crop impact [kW/m^2]"], index=months)
+    crop_impact = pd.DataFrame(impact, columns=["Crop impact [W/m^2]"], index=months)
 
-    return crop_impact
+    return crop_impact*1e3
 
 
 if __name__ == '__main__':

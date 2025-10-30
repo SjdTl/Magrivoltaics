@@ -1,0 +1,14 @@
+crop_type,"potatoes"
+area,100000
+latitude,35.9
+longitude,14.4
+elevation,10
+height,3
+azimuth,180
+tilt,30
+row_width,4
+pitch,9
+panel_area,2.42
+rated_power,580
+lifetime,30
+measure_time,False
