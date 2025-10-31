@@ -286,7 +286,7 @@ def crop_testing(name="crop_testing"):
                               measure_time   = str(input_data['measure_time']) == "True",
                               )
     print(monthly_df)
-    fig, ax = plt.subplots(figsize=(5, 4))
+    fig, ax = plt.subplots(figsize=(4, 3))
 
     ax.plot(np.linspace(1,12,12), monthly_df["Irradiation crops [W/m^2]"], label="33 degree tilt")
 
@@ -314,7 +314,7 @@ def crop_testing(name="crop_testing"):
     ax.set_xlabel("Months")
     ax.set_ylabel("Irradiation [W/m$^2$]")
     ax.set_title("Irradiation with and without panels")
-    ax.legend()
+    ax.legend(loc = 'upper right', fancybox=True, frameon=True, bbox_to_anchor=(1.05, 1.05))
     fig.tight_layout()
 
     save_plot(os.path.join(dir_path, "output", rf"{name}.svg"))
@@ -355,9 +355,9 @@ def main(input_file = "verification_inputs.csv"):
     print(monthly_df.mean())
     print(single_df)
 
-main("verification_inputs.csv")
-main("ideal_inputs.csv")
-vary_energy_output()
-panel_placement("tilt_azimuth", "tilt", "azimuth")
-panel_placement("tilt_pitch", "tilt", "pitch")
+# main("verification_inputs.csv")
+# main("ideal_inputs.csv")
+# vary_energy_output()
+# panel_placement("tilt_azimuth", "tilt", "azimuth")
+# panel_placement("tilt_pitch", "tilt", "pitch")
 crop_testing()
