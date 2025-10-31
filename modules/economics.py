@@ -7,9 +7,9 @@ months = [
         "July", "August", "September", "October", "November", "December"
     ]
 
-def economics(area=10000,
-              coverage: float =0.5,
-              panel_area : float = 1.7,
+def economics(area=70000,
+              coverage: float =0.4,
+              panel_area : float = 2.42,
               energy = np.linspace(5,20,12),
               subsidy=0.0,
               lifetime : float = 30):
@@ -50,12 +50,13 @@ def economics(area=10000,
     See report for more information
     
     """
-
     # area calculations
     area_pv = area * coverage
     n_panels = area_pv / panel_area
     p_sys_kW = (n_panels * 580) / 1000  # total system capacity [kW]
+    OM = 35 * p_sys_kW #[€]
 
+    print(p_sys_kW)
     # estimated CAPEX costs 
     panel_costs=499*n_panels*0.8          # installed cost [€]
     #mounting_costs= 19.22*rows*length_rows + 72.89*rows*n_panels*height_panel
@@ -64,7 +65,6 @@ def economics(area=10000,
     BOP_costs=1048.5*p_sys_kW 
     CAPEX = panel_costs + mounting_costs + installation_costs + BOP_costs      # [€]
 
-    OM = 35 * p_sys_kW #[€]
 
     #capital recovery factor
     r=0.0215

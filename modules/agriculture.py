@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 months = [
     "January", "February", "March", "April", "May", "June",
@@ -17,7 +18,7 @@ def agricultural(
     Parameters
     ----------
     irradiation_crop : np.array
-       Irradiation per m^2 [kW/m2] still arriving at crop 
+       Irradiation per m^2 [W/m2] still arriving at crop 
     crop_type : str
         Crop type (currently supports only 'potatoes')
 
@@ -28,8 +29,8 @@ def agricultural(
             | Month    | Crop impact [W/m^2]  |
             | -------- | -------------------- |
             | January  | xxx                  |
-        A positive value +y indicates that there is y kW/m^2 too much radiance
-        A negative value -y indicates that there is y kW/m^2 too little radiance
+        A positive value +y indicates that there is y W/m^2 too much radiance
+        A negative value -y indicates that there is y W/m^2 too little radiance
         A zero value 0 indicates that the radiation is within the range required for the crop
     
     Raises
@@ -88,15 +89,15 @@ def agricultural(
     if crop_type.lower() not in possible_crops:
         raise ValueError(f"Crop type {crop_type.lower()} not recognized. Choose one of: {possible_crops}")
 
-    # Conversion factor: 1 μmol/m²/s = 0.000217 kW/m²
-    conversion_factor = 0.000217
+    # Conversion factor: 1 μmol/m²/s = 0.217 W/m²
+    conversion_factor = 0.217
 
     crop = crop_requirements[crop_type.lower()]
     stages = crop["stages"]
 
-    # Calculate min and max PPFD lists in kW/m²
-    min_req_kWm2 = [crop["stage_ppfd_min"][stage] * conversion_factor for stage in stages]
-    max_req_kWm2 = [crop["stage_ppfd_max"][stage] * conversion_factor for stage in stages]
+    # Calculate min and max PPFD lists in W/m²
+    min_req_Wm2 = [crop["stage_ppfd_min"][stage] * conversion_factor for stage in stages]
+    max_req_Wm2 = [crop["stage_ppfd_max"][stage] * conversion_factor for stage in stages]
 
     # Compare actual irradiation with required range
     impact=[]
@@ -104,17 +105,17 @@ def agricultural(
         if stages[i] == "dormant":
             impact.append(0)
         else:
-            if irradiation_crop[i] < min_req_kWm2[i]:
-                impact.append(irradiation_crop[i] - min_req_kWm2[i])
-            elif irradiation_crop[i] > max_req_kWm2[i]:     
-                impact.append(irradiation_crop[i] - max_req_kWm2[i])
+            if irradiation_crop[i] < min_req_Wm2[i]:
+                impact.append(irradiation_crop[i] - min_req_Wm2[i])
+            elif irradiation_crop[i] > max_req_Wm2[i]:     
+                impact.append(irradiation_crop[i] - max_req_Wm2[i])
             else:
                 impact.append(0)
 
     # Build DataFrame
-    crop_impact = pd.DataFrame(impact, columns=["Crop impact [W/m^2]"], index=months)
+    crop_impact = pd.DataFrame(np.transpose([impact, min_req_Wm2, max_req_Wm2]), columns=["Crop impact [W/m^2]", "Minimum crop [W/m^2]", "Maximum crop [W/m^2]"], index=months)
 
-    return crop_impact*1e3
+    return crop_impact
 
 
 if __name__ == '__main__':

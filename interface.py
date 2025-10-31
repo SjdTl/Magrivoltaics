@@ -3,6 +3,7 @@ from modules.energyOutput import energy_output
 from modules.energyUsage import energy_usage
 from modules.economics import economics
 from modules.agriculture import agricultural
+from modules.utils import save_plot
 import os as os
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,6 +27,7 @@ def interface(crop_type : str = "potatoes",
               rated_power : float = 580,
               lifetime : float = 30,
               measure_time : bool = False,
+            #   tilt_tracking : bool = False,
               ):
     """
     Description
@@ -64,7 +66,7 @@ def interface(crop_type : str = "potatoes",
     -------
     monthly_df : pd.Dataframe
         Dataframe with all the monthly parameters:
-        | Month    | Energy Output [kWh] | Irradiation Panels [kW/m^2] | Irradiation Crops [kW/m^2] | Energy Export [kWh] | Energy Usage [kWh] | Crop Impact [kW/m^2] |
+        | Month    | Energy Output [kWh] | Irradiation Panels [kW/m^2] | Irradiation Crops [W/m^2]  | Energy Export [kWh] | Energy Usage [kWh] | Crop Impact [kW/m^2] |
         | -------- | ------------------- | --------------------------- | -------------------------- | ------------------- | ------------------ | -------------------- |
         | January  | 237886.351620       | 0.221792                    | 0.090966                   | 237886.351620       | 0                  | -0.017534            |
         | February | 259009.630191       | 0.260392                    | 0.109855                   | 259009.630191       | 0                  | 0.000000             |
@@ -93,6 +95,7 @@ def interface(crop_type : str = "potatoes",
                                 area  = area,
                                 panel_area  = panel_area,
                                 rated_power  = rated_power,
+                                # tilt_tracking = tilt_tracking,
                                 )
     if measure_time == True:
         print("Energy out module")
@@ -108,7 +111,7 @@ def interface(crop_type : str = "potatoes",
         start_time = time.time()
 
     df_agricultural = agricultural(crop_type = crop_type, 
-                                   irradiation_crop= np.array(df_energyOut["Irradiation crops [kW/m^2]"]))
+                                   irradiation_crop= np.array(df_energyOut["Irradiation crops [W/m^2]"]))
     
     if measure_time == True:
         print("Agricultural module")
@@ -132,123 +135,200 @@ def interface(crop_type : str = "potatoes",
     return monthly_df, single_df
 
 def vary_energy_output():
-    areas = np.linspace(10,1e7, 10)
+    plt.style.use(['science','ieee'])
+    areas = np.linspace(10,2e5, 10)
     monthly_dfs = []
     single_dfs = []
 
+    input_file = "ideal_inputs"
+    if input_file.split('.')[-1] == "csv":
+        input_file = input_file.replace(".csv", "")
+
+    input_data_path = os.path.join(dir_path, "inputs", rf"{input_file}.csv")
+    input_data = pd.read_csv(input_data_path, skipinitialspace=True, index_col=0, header=None).transpose()
+    input_data = (input_data.to_dict(orient="records"))[0]
+
     for area in tqdm(areas):
+        monthly_df, _ = interface(crop_type      = str(input_data['crop_type']), 
+                                  area           = float(input_data['area']),
+                                  latitude       = float(input_data['latitude']),
+                                  longitude      = float(input_data['longitude']),
+                                  elevation      = float(input_data['elevation']),
+                                  height         = float(input_data['height']),
+                                  azimuth        = float(input_data['azimuth']), 
+                                  tilt           = float(input_data['tilt']), 
+                                  row_width      = float(input_data['row_width']),
+                                  pitch          = float(input_data['pitch']),
+                                  panel_area     = float(input_data['panel_area']),
+                                  rated_power    = float(input_data['rated_power']),
+                                  lifetime       = float(input_data['lifetime']),
+                                  measure_time   = str(input_data['measure_time']) == "True",
+                              )
         monthly_df, single_df = interface(area=area)
         monthly_dfs.append(monthly_df)
         single_dfs.append(single_df)
 
-    energies = [db["Energy export [kWh]"].mean() for db in monthly_dfs]
-    
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    savefile = os.path.join(dir_path, f"")
-    
+    energies = np.array([db["Energy export [kWh]"].sum() for db in monthly_dfs])
     
     fig, ax = plt.subplots()
-    ax.plot(areas, energies, label="")
+    ax.plot(areas*1e-6, energies*1e-6)
     
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.set_title("")
-    plt.show()
-    # fig.savefig(f"{savefile}.svg", transparent=True)
+    ax.set_xlabel("Area [km$^2$]")
+    ax.set_ylabel("Energy export [GWh/y]")
+    ax.set_title("Area vs energy export")
+    plt.tight_layout()
+    save_plot(os.path.join(dir_path, "output", rf"determine_area.svg"))
 
-def panel_placement(name="panel_placement"):
+def panel_placement(name="panel_placement", parameter_1 = "tilt", parameter_2 = "azimuth"):
     plt.style.use(['science','ieee'])
 
-    # Use the verification file, since the other parameters have not yet been determined
-    input_file = "verification_inputs"
+    input_file = "ideal_inputs"
     if input_file.split('.')[-1] == "csv":
         input_file = input_file.replace(".csv", "")
 
-    input_data_path = os.path.join(dir_path, rf"{input_file}.csv")
+    input_data_path = os.path.join(dir_path, "inputs", rf"{input_file}.csv")
     input_data = pd.read_csv(input_data_path, skipinitialspace=True, index_col=0, header=None).transpose()
     input_data = (input_data.to_dict(orient="records"))[0]
 
     N = 10
-    tilts = np.linspace(10, 50, N)
-    azimuths = np.linspace(120, 240, N)
-
     energy_outputs = np.array([[0]*N]*N)
-    crop_impacts = np.array([[0]*N]*N)
+    crop_impacts = np.array([[0]*N]*N, dtype=np.float16)
+
+    interface_lambda = lambda az, til, pit : interface(crop_type      = str(input_data['crop_type']), 
+                                                       area           = float(input_data['area']),
+                                                       latitude       = float(input_data['latitude']),
+                                                       longitude      = float(input_data['longitude']),
+                                                       elevation      = float(input_data['elevation']),
+                                                       height         = float(input_data['height']),
+                                                       azimuth        = az, 
+                                                       tilt           = til, 
+                                                       row_width      = float(input_data['row_width']),
+                                                       pitch          = pit,
+                                                       panel_area     = float(input_data['panel_area']),
+                                                       rated_power    = float(input_data['rated_power']),
+                                                       lifetime       = float(input_data['lifetime']),
+                                                       measure_time   = str(input_data['measure_time']) == "True",
+                                                       )
+
+    def extract_data(monthly_df):
+        monthly_df.loc[monthly_df["Crop impact [W/m^2]"] > 0, "Crop impact [W/m^2]"]=0
+        out = monthly_df.mean()
+        energy_outputs[t, a] = out["Energy output [kWh]"]
+        crop_impacts[t, a] = out["Crop impact [W/m^2]"]
+
+    def plot_results(data, title, unit, xlabel, ylabel, xlabeldata, ylabeldata, subname):
+        print("Plotting ...")
+        fig, ax = plt.subplots(figsize=(6, 5))
+
+        im = ax.imshow(data, origin='lower', cmap='viridis')
+        cbar = fig.colorbar(im, ax=ax, orientation='vertical', fraction=0.046, pad=0.04)
+        cbar.set_label(rf'{title} [{unit}]', fontsize=12)
+
+        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_xlabel(xlabel, fontsize=14)
+        ax.set_ylabel(ylabel, fontsize=14)
+
+        ax.set_xticks(np.arange(N))
+        ax.set_yticks(np.arange(N))
+
+        ax.set_xticklabels(np.round(xlabeldata, 1), rotation=45, ha='right')
+        ax.set_yticklabels(np.round(ylabeldata, 1))
+
+        fig.tight_layout()
+        save_plot(os.path.join(dir_path, "output", rf"{name}_{subname}.svg"))
+
+    if parameter_1 == "tilt" and parameter_2 == "azimuth":
+        tilts = np.linspace(10, 50, N)
+        azimuths = np.linspace(120, 240, N)
+        for t, tilt in (enumerate(tqdm(tilts))):
+            for a, azimuth in enumerate(azimuths):
+                monthly_df, _ = interface_lambda(azimuth, tilt, float(input_data['pitch']))
+                extract_data(monthly_df)
+        plot_results(energy_outputs,'Average Energy Output', "kWh", "Azimuth Angle [degrees]", "Tilt angle [degrees]", azimuths, tilts, "energy")
+        plot_results(crop_impacts, 'Average Crop Impact', "W/m$^2$", "Azimuth Angle [degrees]", "Tilt angle [degrees]", azimuths, tilts, "crop")
+        
+    if parameter_1 == "tilt" and parameter_2 == "pitch":
+        tilts = np.linspace(10, 50, N)
+
+        min_pitch = float(input_data["row_width"])
+        pitchs = np.linspace(min_pitch+1, min_pitch + 10, N)
+        for t, tilt in (enumerate(tqdm(tilts))):
+            for a, pitch in enumerate(pitchs):
+                monthly_df, _ = interface_lambda(float(input_data['azimuth']), tilt, pitch)
+                extract_data(monthly_df)
+        plot_results(energy_outputs,'Average Energy Output', "kWh", "Pitch [m]", "Tilt angle [degrees]", pitchs, tilts, "energy")
+        plot_results(crop_impacts, 'Average Crop Impact', "W/m$^2$", "Pitch [m]", "Tilt angle [degrees]", pitchs, tilts, "crop")
+
+def crop_testing(name="crop_testing"):
+    plt.style.use(['science','ieee'])
+
+    input_file = "ideal_inputs"
+    if input_file.split('.')[-1] == "csv":
+        input_file = input_file.replace(".csv", "")
+
+    input_data_path = os.path.join(dir_path, "inputs", rf"{input_file}.csv")
+    input_data = pd.read_csv(input_data_path, skipinitialspace=True, index_col=0, header=None).transpose()
+    input_data = (input_data.to_dict(orient="records"))[0]
+
+    monthly_df, _ = interface(crop_type      = str(input_data['crop_type']), 
+                              area           = float(input_data['area']),
+                              latitude       = float(input_data['latitude']),
+                              longitude      = float(input_data['longitude']),
+                              elevation      = float(input_data['elevation']),
+                              height         = float(input_data['height']),
+                              azimuth        = float(input_data['azimuth']), 
+                              tilt           = 33, 
+                              row_width      = float(input_data['row_width']),
+                              pitch          = float(input_data['pitch']),
+                              panel_area     = float(input_data['panel_area']),
+                              rated_power    = float(input_data['rated_power']),
+                              lifetime       = float(input_data['lifetime']),
+                              measure_time   = str(input_data['measure_time']) == "True",
+                              )
+    print(monthly_df)
+    fig, ax = plt.subplots(figsize=(5, 4))
+
+    ax.plot(np.linspace(1,12,12), monthly_df["Irradiation crops [W/m^2]"], label="33 degree tilt")
+
+    monthly_df, _ = interface(crop_type      = str(input_data['crop_type']), 
+                              area           = float(input_data['area']),
+                              latitude       = float(input_data['latitude']),
+                              longitude      = float(input_data['longitude']),
+                              elevation      = float(input_data['elevation']),
+                              height         = float(input_data['height']),
+                              azimuth        = float(input_data['azimuth']), 
+                              tilt           = 0, 
+                              row_width      = float(input_data['row_width']),
+                              pitch          = float(input_data['pitch']),
+                              panel_area     = float(input_data['panel_area']),
+                              rated_power    = float(input_data['rated_power']),
+                              lifetime       = float(input_data['lifetime']),
+                              measure_time   = str(input_data['measure_time']) == "True",
+                              )
     
-    for t, tilt in (enumerate(tqdm(tilts))):
-        for a, azimuth in enumerate(azimuths):
-            montly_df, _ = interface(crop_type      = str(input_data['crop_type']), 
-                            area           = float(input_data['area']),
-                            latitude       = float(input_data['latitude']),
-                            longitude      = float(input_data['longitude']),
-                            elevation      = float(input_data['elevation']),
-                            height         = float(input_data['height']),
-                            azimuth        = azimuth, 
-                            tilt           = tilt, 
-                            row_width      = float(input_data['row_width']),
-                            pitch          = float(input_data['pitch']),
-                            panel_area     = float(input_data['panel_area']),
-                            rated_power    = float(input_data['rated_power']),
-                            lifetime       = float(input_data['lifetime']),
-                            measure_time   = str(input_data['measure_time']) == "True",
-                            )
-            out = montly_df.abs().mean()
-            energy_outputs[t, a] = out["Energy output [kWh]"]
-            crop_impacts[t, a] = out["Crop impact [W/m^2]"]
-
-    print(energy_outputs)
-    print(crop_impacts)
-
-    fig, ax = plt.subplots(figsize=(8, 6))
-
-    im = ax.imshow(energy_outputs, origin='lower', cmap='viridis')
-    cbar = fig.colorbar(im, ax=ax, orientation='vertical', fraction=0.046, pad=0.04)
-    cbar.set_label('Average Energy Output [kWh]', fontsize=12)
-
-    ax.set_title('Average Energy Output', fontsize=16, fontweight='bold')
-    ax.set_xlabel('Azimuth Angle [degrees]', fontsize=14)
-    ax.set_ylabel('Tilt Angle [degrees]', fontsize=14)
-
-    ax.set_xticks(np.arange(N))
-    ax.set_yticks(np.arange(N))
-
-    ax.set_xticklabels(np.round(azimuths, 1), rotation=45, ha='right')
-    ax.set_yticklabels(np.round(tilts, 1))
-
-    fig.tight_layout()
-    plt.savefig(rf"{name}_energy.svg", transparent=True)
-
+    ax.plot(np.linspace(1,12,12), monthly_df["Irradiation crops [W/m^2]"], label="0 degree tilt")
     
-    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.plot(np.linspace(1,12,12), monthly_df["Irradiation panels [W/m^2]"], label="Horizontal irradiation")
+    ax.plot(np.linspace(1,12,12), monthly_df["Minimum crop [W/m^2]"], "-o", label="Minimum irradiation")
 
-    im = ax.imshow(crop_impacts, origin='lower', cmap='viridis')
-    cbar = fig.colorbar(im, ax=ax, orientation='vertical', fraction=0.046, pad=0.04)
-    cbar.set_label('Absolute Average Crop Impact [W/$m^2$]', fontsize=12)
-
-    ax.set_title('Average Crop Impact', fontsize=16, fontweight='bold')
-    ax.set_xlabel('Azimuth Angle [degrees]', fontsize=14)
-    ax.set_ylabel('Tilt Angle [degrees]', fontsize=14)
-
-    ax.set_xticks(np.arange(N))
-    ax.set_yticks(np.arange(N))
-
-    ax.set_xticklabels(np.round(azimuths, 1), rotation=45, ha='right')
-    ax.set_yticklabels(np.round(tilts, 1))
-
+    ax.set_xlabel("Months")
+    ax.set_ylabel("Irradiation [W/m$^2$]")
+    ax.set_title("Irradiation with and without panels")
+    ax.legend()
     fig.tight_layout()
-    plt.savefig(rf"{name}_crop.svg", transparent=True)
 
+    save_plot(os.path.join(dir_path, "output", rf"{name}.svg"))
 
 
 def main(input_file = "verification_inputs.csv"):
     if input_file.split('.')[-1] == "csv":
         input_file = input_file.replace(".csv", "")
 
-    input_data_path = os.path.join(dir_path, rf"{input_file}.csv")
+    input_data_path = os.path.join(dir_path, "inputs", rf"{input_file}.csv")
     input_data = pd.read_csv(input_data_path, skipinitialspace=True, index_col=0, header=None).transpose()
     input_data = (input_data.to_dict(orient="records"))[0]
 
-    montly_df, single_df = interface(crop_type      = str(input_data['crop_type']), 
+    monthly_df, single_df = interface(crop_type      = str(input_data['crop_type']), 
                                      area           = float(input_data['area']),
                                      latitude       = float(input_data['latitude']),
                                      longitude      = float(input_data['longitude']),
@@ -263,17 +343,21 @@ def main(input_file = "verification_inputs.csv"):
                                      lifetime       = float(input_data['lifetime']),
                                      measure_time   = str(input_data['measure_time']) == "True",
                                      )
+
+    monthly_df["Crop impact [W/m^2]"][monthly_df["Crop impact [W/m^2]"] > 0]=0
     
     df_name = os.path.join(dir_path, "output", f"{input_file}_monthly.csv")
-    montly_df.to_csv(df_name)
+    monthly_df.to_csv(df_name)
     df_name = os.path.join(dir_path, "output", f"{input_file}_onetime.csv")
     single_df.to_csv(df_name)
 
-    print(montly_df)
-    print(montly_df.mean())
+    print(monthly_df)
+    print(monthly_df.mean())
     print(single_df)
 
-# vary_energy_output()
-# main()
-panel_placement()
-
+main("verification_inputs.csv")
+main("ideal_inputs.csv")
+vary_energy_output()
+panel_placement("tilt_azimuth", "tilt", "azimuth")
+panel_placement("tilt_pitch", "tilt", "pitch")
+crop_testing()

@@ -13,13 +13,15 @@ def energy_output(latitude: float = 35,
                   longitude : float = 15,
                   elevation : float = 10,
                   height : float = 2.5,
-                  azimuth : float = 180,
-                  tilt : float = 30,
+                  azimuth : float = 186,
+                  tilt : float = 0,
                   row_width : float = 2*2.384,
-                  pitch : float = 8,
+                  pitch : float =  7,
                   area : float = 10000,
                   panel_area : float = 1.7,
                   rated_power : float = 440,
+                  plot : bool = False,
+                #   tilt_tracking : bool = False,
                 ):
     """
     Description
@@ -53,7 +55,7 @@ def energy_output(latitude: float = 35,
     -------
     energy : pd.Dataframe
         Energy per month in a pandas dataframe AND the solar irradiation according to the following format:
-        | Month    | Energy output [kWh] | Irradiation crops [kW/m^2]       | Irradiation panels [kW/m^2]          |
+        | Month    | Energy output [kWh] | Irradiation crops [W/m^2]        | Irradiation panels [W/m^2]           |
         | -------- | ------------------- | -------------------------------- | ------------------------------------ |
         | January  | xxx                 | xxx                              | xxx                                  |
         | February | xxx                 | xxx                              | xxx                                  |
@@ -87,9 +89,7 @@ def energy_output(latitude: float = 35,
     )
     
 
-    panel_irradiance_Wm2 = poa['poa_global']
-    panel_irradiance_kWhm2 = panel_irradiance_Wm2 / 1000.0
-    monthly_panel_irradiance = panel_irradiance_kWhm2.resample('ME').mean()
+    monthly_panel_irradiance = clearsky['ghi'].resample('ME').mean()
     monthly_panel_irradiance.index = months
 
     # --- 4. PVWatts power model
@@ -114,15 +114,17 @@ def energy_output(latitude: float = 35,
     monthly_avg_power = power_kw.resample('ME').sum()
     monthly_avg_power.index = months
 
-    # tracking_orientations = pvlib.tracking.singleaxis(
-    #     apparent_zenith=solpos['apparent_zenith'],
-    #     solar_azimuth=solpos['azimuth'],
-    #     axis_azimuth=azimuth,
-    #     max_angle=tilt,
-    #     backtrack=True,
-    #     gcr=gcr,
-    # )
-    # print(tracking_orientations)
+    # if tilt_tracking:
+    #     tracking_orientations = pvlib.tracking.singleaxis(
+    #         apparent_zenith=solpos['apparent_zenith'],
+    #         solar_azimuth=solpos['azimuth'],
+    #         axis_azimuth=azimuth,
+    #         max_angle=tilt*2,
+    #         backtrack=True,
+    #         gcr=gcr,
+    #     )
+
+        # tilt = tracking_orientations['surface_tilt']
 
     vf_ground_sky = pvlib.bifacial.utils.vf_ground_sky_2d_integ(
     surface_tilt=tilt,
@@ -143,41 +145,41 @@ def energy_output(latitude: float = 35,
                            * cosd(solpos['apparent_zenith'])
                             + vf_ground_sky * clearsky['dhi'])
     
-    crop_irradiance_kWhm2 = crop_avg_irradiance / 1000.0
-    monthly_crop_irradiance = crop_irradiance_kWhm2.resample('ME').mean()
+    monthly_crop_irradiance = crop_avg_irradiance.resample('ME').mean()
     monthly_crop_irradiance.index = months
 
     result = pd.DataFrame({
     'Energy output [kWh]': monthly_avg_power.values,
-    'Irradiation panels [kW/m^2]': monthly_panel_irradiance.values,
-    'Irradiation crops [kW/m^2]': monthly_crop_irradiance.values
+    'Irradiation panels [W/m^2]': monthly_panel_irradiance.values,
+    'Irradiation crops [W/m^2]': monthly_crop_irradiance.values,
     }, index=months)
 
-    plt.figure(figsize=(10, 6))
 
-    # (a) Irradiance comparison
-    plt.subplot(2, 1, 1)
-    plt.plot(result.index, result['Irradiation panels [kW/m^2]'],
-            marker='o', label='Panel level')
-    plt.plot(result.index, result['Irradiation crops [kW/m^2]'],
-            marker='s', label='Crop level')
-    plt.ylabel('Irradiance (kW/m²)')
-    plt.title('Monthly Irradiance (Panel vs Crop Level)')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
+    if plot:
+        plt.figure(figsize=(10, 6))
+        # (a) Irradiance comparison
+        plt.subplot(2, 1, 1)
+        plt.plot(result.index, result['Irradiation panels [W/m^2]'],
+                marker='o', label='Panel level')
+        plt.plot(result.index, result['Irradiation crops [W/m^2]'],
+                marker='s', label='Crop level')
+        plt.ylabel('Irradiance (W/m²)')
+        plt.title('Monthly Irradiance (Panel vs Crop Level)')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
 
-    # (b) Power output
-    plt.subplot(2, 1, 2)
-    plt.plot(result.index, result['Energy output [kWh]'],
-            marker='d', color='tab:green', label='Power Output')
-    plt.ylabel('Average Power (kW)')
-    plt.title('Monthly Average Power Output')
-    plt.grid(True, alpha=0.3)
+        # (b) Power output
+        plt.subplot(2, 1, 2)
+        plt.plot(result.index, result['Energy output [kWh]'],
+                marker='d', color='tab:green', label='Power Output')
+        plt.ylabel('Average Power (kW)')
+        plt.title('Monthly Average Power Output')
+        plt.grid(True, alpha=0.3)
 
-    plt.tight_layout()
-    plt.show()
+        plt.tight_layout()
+        plt.show()
     return result
 
 if __name__ == '__main__':
-    database = energy_output()
+    database = energy_output(tilt_tracking=True)
     print(database)
